@@ -18,24 +18,24 @@ class AuthController extends Controller
     // REGISTER PROCESS
     public function register(Request $request)
     {
-        // Validasi input dari form (ditambahkan phone agar sesuai dengan form HTML)
+        // Validasi input
         $request->validate([
             'name' => 'required',
             'email' => 'required|email|unique:users', 
-            'phone' => 'required|min:10', // Menangkap input form telepon
-            'password' => 'required|min:8' // Disesuaikan dengan minimal 8 karakter di HTML
+            'phone' => 'required|min:10|max:13', 
+            'password' => 'required|min:8' 
         ]);
 
-        // Pakai Eloquent User::create dan PAKSA role jadi 'siswa'
+        // Menyimpan user baru ke database
         User::create([
             'name' => $request->name,
             'email' => $request->email,
-            'nomor_hp' => $request->phone, // Pastikan nama kolom di database kamu benar 'nomor_hp'. Jika namanya beda, sesuaikan.
+            'nomor_hp' => $request->phone, // Pastikan nama kolom di database kamu adalah 'nomor_hp'
             'password' => Hash::make($request->password),
-            'role' => 'siswa' // <-- Tambahan wajib biar otomatis jadi murid
+            'role' => 'siswa' // Role default untuk registrasi
         ]);
 
-        // Mengarahkan langsung ke halaman login dengan pesan sukses
+        // Redirect ke login dengan notifikasi sukses
         return redirect('/login')->with('success', 'Akun berhasil dibuat! Silakan Login.');
     }
 
@@ -53,42 +53,40 @@ class AuthController extends Controller
             'password' => $request->password
         ];
 
-        // Proses login bawaan Laravel
+        // Cek kredensial
         if (Auth::attempt($data)) {
             $request->session()->regenerate();
 
-            // JALAN SIHIRNYA DI SINI: Cek role user yang baru login
+            // Cek role untuk menentukan tujuan dashboard
             $role = Auth::user()->role;
 
             if ($role === 'admin') {
-                return redirect('/admin/dashboard'); // Lempar ke dashboard admin
+                return redirect('/admin/dashboard');
             } elseif ($role === 'instruktur') {
-                return redirect('/instruktur/jadwal'); // Lempar ke halaman instruktur
+                return redirect('/instruktur/jadwal');
             }
 
-            return redirect('/dashboard'); // Kalau bukan admin & instruktur, pasti siswa
+            return redirect('/dashboard')->with('success', 'Selamat datang kembali, ' . Auth::user()->name . '!');
         }
 
-        return back()->with('error', 'Email atau password salah');
+        // Jika gagal
+        return back()->with('error', 'Email atau password salah.');
     }
 
-    // DASHBOARD
+    // DASHBOARD (Siswa)
     public function dashboard()
     {
         return view('dashboard');
     }
 
-    // LOGOUT (Diperbaiki)
+    // LOGOUT (Sesuai keamanan standar Laravel)
     public function logout(Request $request)
     {
-        // 1. Proses mengeluarkan akun
         Auth::logout();
         
-        // 2. Menghapus sesi secara total untuk keamanan
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        // 3. Melempar kembali ke halaman login
-        return redirect('/login');
+        return redirect('/login')->with('success', 'Anda telah berhasil logout.');
     }
 }
