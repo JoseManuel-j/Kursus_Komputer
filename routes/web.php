@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PendaftaranController;
+use Illuminate\Http\Request;
 
 Route::get('/', function () {
     return view('home');
@@ -43,23 +44,35 @@ Route::get('/profile', function () {
 */
 
 Route::middleware('auth')->group(function () {
-    Route::get('/kelas', function () {
+    Route::get('/kelas', function (Request $request) {
         $userId = Auth::id(); 
+        $search = $request->input('search');
+        $kategori = $request->input('kategori');
 
+        // Cek status pendaftaran
         $kelasAktif = DB::table('pendaftaran')
             ->where('user_id', $userId)
             ->where('status', 'aktif')
             ->first();
 
+        // Query program
+        $query = DB::table('program_kursus');
+
         if ($kelasAktif) {
-            $programs = DB::table('program_kursus')
-                ->where('id', $kelasAktif->program_id)
-                ->get();
+            $query->where('id', $kelasAktif->program_id);
             $isRegistered = true; 
         } else {
-            $programs = DB::table('program_kursus')->get();
             $isRegistered = false;
         }
+
+        // Terapkan Filter
+        $programs = $query->when($search, function ($q) use ($search) {
+                return $q->where('nama_program', 'like', "%{$search}%");
+            })
+            ->when($kategori, function ($q) use ($kategori) {
+                return $q->where('tipe_kelas', $kategori);
+            })
+            ->get();
 
         return view('kelas', compact('programs', 'isRegistered')); 
     })->name('kelas');
@@ -146,19 +159,12 @@ Route::middleware('auth')->group(function () {
 | AREA KHUSUS INSTRUKTUR
 |--------------------------------------------------------------------------
 */
-/*
-|--------------------------------------------------------------------------
-| AREA KHUSUS INSTRUKTUR
-|--------------------------------------------------------------------------
-*/
 Route::middleware('auth')->group(function () {
     Route::get('/instruktur/jadwal', function () {
-        // Kalau yang maksa masuk bukan instruktur, tendang ke dashboard utama
         if (Auth::user()->role !== 'instruktur') {
             return redirect('/dashboard');
         }
         
-        // Tarik jadwal dari database khusus buat instruktur yang lagi login
         $jadwals = DB::table('jadwal_kelas')
             ->join('program_kursus', 'jadwal_kelas.program_id', '=', 'program_kursus.id')
             ->where('jadwal_kelas.instruktur_id', Auth::id())
