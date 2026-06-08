@@ -18,22 +18,25 @@ class AuthController extends Controller
     // REGISTER PROCESS
     public function register(Request $request)
     {
-        // Validasi input dari form
+        // Validasi input dari form (ditambahkan phone agar sesuai dengan form HTML)
         $request->validate([
             'name' => 'required',
             'email' => 'required|email|unique:users', 
-            'password' => 'required|min:6'
+            'phone' => 'required|min:10', // Menangkap input form telepon
+            'password' => 'required|min:8' // Disesuaikan dengan minimal 8 karakter di HTML
         ]);
 
         // Pakai Eloquent User::create dan PAKSA role jadi 'siswa'
         User::create([
             'name' => $request->name,
             'email' => $request->email,
+            'nomor_hp' => $request->phone, // Pastikan nama kolom di database kamu benar 'nomor_hp'. Jika namanya beda, sesuaikan.
             'password' => Hash::make($request->password),
             'role' => 'siswa' // <-- Tambahan wajib biar otomatis jadi murid
         ]);
 
-        return redirect('/login')->with('success', 'Akun berhasil dibuat!');
+        // Mengarahkan langsung ke halaman login dengan pesan sukses
+        return redirect('/login')->with('success', 'Akun berhasil dibuat! Silakan Login.');
     }
 
     // LOGIN VIEW
@@ -75,10 +78,17 @@ class AuthController extends Controller
         return view('dashboard');
     }
 
-    // LOGOUT
-    public function logout()
+    // LOGOUT (Diperbaiki)
+    public function logout(Request $request)
     {
+        // 1. Proses mengeluarkan akun
         Auth::logout();
+        
+        // 2. Menghapus sesi secara total untuk keamanan
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        // 3. Melempar kembali ke halaman login
         return redirect('/login');
     }
 }
