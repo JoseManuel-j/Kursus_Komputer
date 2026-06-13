@@ -18,7 +18,7 @@
             <div class="d-flex gap-2 justify-content-md-end">
                 <a href="/kelas" class="btn btn-outline-secondary">Semua</a>
                 <a href="/kelas?kategori=reguler" class="btn btn-outline-secondary">Reguler</a>
-                <a href="/kelas?kategori=intensif" class="btn btn-outline-secondary">Intensif</a>
+                <a href="/kelas?kategori=private" class="btn btn-outline-secondary">Private</a>
             </div>
         </div>
     </div>
