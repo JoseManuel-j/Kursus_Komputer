@@ -22,7 +22,6 @@
                     
                     <div class="position-absolute" style="top: -50px; left: 40px;">
                         @php
-                            // Cek apakah siswa punya pas foto. Jika ada pakai fotonya, jika tidak pakai inisial nama
                             $avatarUrl = ($pendaftaran && $pendaftaran->pas_foto) 
                                 ? asset('uploads/dokumen_siswa/' . $pendaftaran->pas_foto) 
                                 : 'https://ui-avatars.com/api/?name=' . urlencode($siswa->name) . '&background=ffffff&color=4f46e5&size=100&bold=true';
@@ -47,6 +46,11 @@
                             <label class="text-muted small fw-bold text-uppercase mb-1">Email Address</label>
                             <p class="fs-5 fw-semibold text-dark mb-0">{{ $siswa->email }}</p>
                         </div>
+
+                        <div class="col-md-6 mb-4">
+                            <label class="text-muted small fw-bold text-uppercase mb-1">Nomor HP</label>
+                            <p class="fs-5 fw-semibold text-dark mb-0">{{ $siswa->nomor_hp ?? 'Belum ada nomor HP' }}</p>
+                        </div>
                         
                         <div class="col-md-6 mb-4">
                             <label class="text-muted small fw-bold text-uppercase mb-1">Tempat, Tanggal Lahir</label>
@@ -61,7 +65,7 @@
                             <p class="fs-5 fw-semibold text-dark mb-0">{{ $siswa->agama ?? '-' }}</p>
                         </div>
 
-                        <div class="col-12 mb-4">
+                        <div class="col-md-6 mb-4">
                             <label class="text-muted small fw-bold text-uppercase mb-1">Alamat Lengkap</label>
                             <p class="fs-5 fw-semibold text-dark mb-0">{{ $siswa->alamat ?? 'Belum ada data alamat.' }}</p>
                         </div>
@@ -121,4 +125,4 @@
         </div>
     </div>
 </div>
-@endsection 
+@endsection

@@ -3,7 +3,6 @@
 @section('content')
 
 @php
-    // Mengambil data pendaftaran aktif untuk user yang sedang login
     $pendaftaran = \Illuminate\Support\Facades\DB::table('pendaftaran')
         ->leftJoin('program_kursus', 'pendaftaran.program_id', '=', 'program_kursus.id')
         ->where('pendaftaran.user_id', auth()->id())
@@ -11,7 +10,6 @@
         ->orderBy('pendaftaran.created_at', 'desc')
         ->first();
 
-    // Cek apakah user punya pas foto, jika tidak gunakan inisial nama
     $avatarUrl = ($pendaftaran && $pendaftaran->pas_foto) 
         ? asset('uploads/dokumen_siswa/' . $pendaftaran->pas_foto) 
         : 'https://ui-avatars.com/api/?name=' . urlencode(auth()->user()->name) . '&background=ffffff&color=4f46e5&size=100&bold=true';
@@ -66,6 +64,11 @@
                 <h5 class="fw-bold mb-4" style="color: #4f46e5;"><i class="fa fa-id-card me-2"></i>Biodata Pribadi</h5>
                 <div class="row">
                     <div class="col-md-6 mb-4">
+                        <label class="text-muted small fw-bold text-uppercase mb-1"><i class="fa fa-phone me-2"></i>Nomor HP</label>
+                        <p class="fs-5 fw-semibold text-dark mb-0">{{ auth()->user()->nomor_hp ?? 'Belum ada nomor HP' }}</p>
+                    </div>
+                    
+                    <div class="col-md-6 mb-4">
                         <label class="text-muted small fw-bold text-uppercase mb-1"><i class="fa fa-map-marker-alt me-2"></i>Tempat, Tanggal Lahir</label>
                         <p class="fs-5 fw-semibold text-dark mb-0">
                             {{ auth()->user()->tempat_lahir ?? '-' }}, 
@@ -78,7 +81,7 @@
                         <p class="fs-5 fw-semibold text-dark mb-0">{{ auth()->user()->agama ?? '-' }}</p>
                     </div>
                     
-                    <div class="col-12 mb-4">
+                    <div class="col-md-6 mb-4">
                         <label class="text-muted small fw-bold text-uppercase mb-1"><i class="fa fa-home me-2"></i>Alamat Lengkap</label>
                         <p class="fs-5 fw-semibold text-dark mb-0">{{ auth()->user()->alamat ?? 'Belum ada data alamat.' }}</p>
                     </div>
@@ -132,4 +135,4 @@
         
     </div>
 </div>
-@endsection
+@endsection 

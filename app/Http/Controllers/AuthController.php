@@ -18,24 +18,32 @@ class AuthController extends Controller
     // REGISTER PROCESS
     public function register(Request $request)
     {
-        // Validasi input
+        // 1. Validasi input ditambah dengan field biodata baru
         $request->validate([
-            'name' => 'required',
-            'email' => 'required|email|unique:users', 
-            'phone' => 'required|min:10|max:13', 
-            'password' => 'required|min:8' 
+            'name'          => 'required',
+            'email'         => 'required|email|unique:users', 
+            'tempat_lahir'  => 'required',
+            'tanggal_lahir' => 'required|date',
+            'agama'         => 'required',
+            'alamat'        => 'required',
+            'phone'         => 'required|min:10|max:13', 
+            'password'      => 'required|min:8|confirmed' 
         ]);
 
-        // Menyimpan user baru ke database
+        // 2. Menyimpan user baru ke database beserta biodatanya
         User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'nomor_hp' => $request->phone, // Pastikan nama kolom di database kamu adalah 'nomor_hp'
-            'password' => Hash::make($request->password),
-            'role' => 'siswa' // Role default untuk registrasi
+            'name'          => $request->name,
+            'email'         => $request->email,
+            'tempat_lahir'  => $request->tempat_lahir,
+            'tanggal_lahir' => $request->tanggal_lahir,
+            'agama'         => $request->agama,
+            'alamat'        => $request->alamat,
+            'Phone'      => $request->phone, // Pastikan nama kolom di database kamu adalah 'nomor_hp'
+            'password'      => Hash::make($request->password),
+            'role'          => 'siswa' // Role default untuk registrasi
         ]);
 
-        // Redirect ke login dengan notifikasi sukses
+        // 3. Redirect ke login dengan notifikasi sukses
         return redirect('/login')->with('success', 'Akun berhasil dibuat! Silakan Login.');
     }
 
@@ -49,7 +57,7 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $data = [
-            'email' => $request->email,
+            'email'    => $request->email,
             'password' => $request->password
         ];
 
