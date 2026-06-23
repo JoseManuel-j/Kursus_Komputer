@@ -108,6 +108,7 @@
                     <label class="custom-label">NomorHp</label>
                     <input type="tel" name="phone" class="form-control custom-input" required minlength="10" maxlength="13" placeholder="081234567890">
                 </div>
+                
 
                 <div>
                     <label class="custom-label">Password</label>
