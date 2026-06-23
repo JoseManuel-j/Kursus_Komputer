@@ -111,7 +111,27 @@ Route::middleware('auth')->group(function () {
         return view('admin.siswa', compact('siswas'));
     });
 
-    // 3. Program Kursus
+    // 3. Detail siswa
+    Route::get('/admin/siswa/{id}', function ($id) {
+        if (Auth::user()->role !== 'admin') return redirect('/dashboard');
+        
+        $siswa = DB::table('users')->where('id', $id)->where('role', 'siswa')->first();
+
+        if (!$siswa) {
+            return redirect('/admin/siswa')->with('error', 'Data siswa tidak ditemukan.');
+        }
+
+        $pendaftaran = DB::table('pendaftaran')
+            ->leftJoin('program_kursus', 'pendaftaran.program_id', '=', 'program_kursus.id')
+            ->where('pendaftaran.user_id', $id)
+            ->select('pendaftaran.*', 'program_kursus.nama_program')
+            ->orderBy('pendaftaran.created_at', 'desc')
+            ->first();
+
+        return view('admin.siswa_detail', compact('siswa', 'pendaftaran'));
+    });
+
+    // 4. Program Kursus
     Route::get('/admin/program', function () {
         if (Auth::user()->role !== 'admin') return redirect('/dashboard');
         
@@ -119,7 +139,7 @@ Route::middleware('auth')->group(function () {
         return view('admin.program', compact('programs'));
     });
 
-    // 4. Tagihan & Bukti Pembayaran
+    // 5. Tagihan & Bukti Pembayaran
     Route::get('/admin/tagihan', function () {
         if (Auth::user()->role !== 'admin') return redirect('/dashboard');
         
@@ -141,7 +161,7 @@ Route::middleware('auth')->group(function () {
         return view('admin.tagihan', compact('tagihans'));
     });
 
-    // 5. Proses Konfirmasi Pembayaran
+    // 6. Proses Konfirmasi Pembayaran
     Route::post('/admin/tagihan/{id}/konfirmasi', function ($id) {
         if (Auth::user()->role !== 'admin') return redirect('/dashboard');
         

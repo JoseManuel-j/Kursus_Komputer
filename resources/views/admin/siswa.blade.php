@@ -25,7 +25,9 @@
                     <td class="py-3 px-4 text-muted">{{ $siswa->email }}</td>
                     <td class="py-3 px-4 text-muted">{{ \Carbon\Carbon::parse($siswa->created_at)->format('d M Y') }}</td>
                     <td class="py-3 px-4 text-center">
-                        <button class="btn btn-sm btn-outline-primary rounded-pill px-3"><i class="fa fa-eye me-1"></i> Detail</button>
+                        <a href="/admin/siswa/{{ $siswa->id }}" class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                            <i class="fa fa-eye me-1"></i> Detail
+                        </a>
                     </td>
                 </tr>
                 @empty
