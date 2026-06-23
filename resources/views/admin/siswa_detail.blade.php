@@ -1,8 +1,8 @@
-@extends('layouts.app')
+@extends('admin.layouts.app_admin')
 
 @section('content')
-<div class="container py-4">
-    <div class="mb-4">
+<div class="container pt-2 pb-4">
+    <div class="mb-4" style="margin-top:-100px;">
         <a href="/admin/siswa" class="btn btn-outline-secondary shadow-sm rounded-pill px-4">
             <i class="fa fa-arrow-left me-2"></i> Kembali ke Data Siswa
         </a>
