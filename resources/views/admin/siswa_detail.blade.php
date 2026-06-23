@@ -35,7 +35,19 @@
 
                     <div style="margin-top: 60px;"></div>
 
-                    <h5 class="fw-bold mb-4" style="color: #4f46e5;"><i class="fa fa-id-card me-2"></i>Informasi Pribadi</h5>
+                    <div class="d-flex justify-content-between align-items-center mb-4 mt-3">
+                        <h5 class="fw-bold mb-0" style="color: #4f46e5;"><i class="fa fa-id-card me-2"></i>Informasi Pribadi</h5>
+                        <button type="button" class="btn btn-sm btn-outline-primary fw-bold rounded-pill px-3 shadow-sm" data-bs-toggle="modal" data-bs-target="#modalEditSiswa">
+                            <i class="fa fa-edit me-1"></i> Edit Data Siswa
+                        </button>
+                    </div>
+
+                    @if(session('success'))
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <i class="fa fa-check-circle me-2"></i> {{ session('success') }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    @endif
                     <div class="row">
                         <div class="col-md-6 mb-4">
                             <label class="text-muted small fw-bold text-uppercase mb-1">Nama Lengkap</label>
@@ -122,6 +134,72 @@
                 </div>
             </div>
             
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalEditSiswa" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content" style="border-radius: 15px; border: none;">
+            <div class="modal-header text-white" style="background: linear-gradient(135deg, #4f46e5, #7c3aed); border-radius: 15px 15px 0 0;">
+                <h5 class="modal-title fw-bold"><i class="fa fa-user-edit me-2"></i>Edit Data Siswa</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            
+            <form action="/admin/siswa/{{ $siswa->id }}/update" method="POST">
+                @csrf
+                @method('PUT')
+                
+                <div class="modal-body p-4">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-muted small text-uppercase">Nama Lengkap</label>
+                            <input type="text" name="name" class="form-control" value="{{ $siswa->name }}" required>
+                        </div>
+                    <div class="col-md-6 mb-4">
+                        <label class="text-muted small fw-bold text-uppercase mb-1">Nomor HP</label>
+                        <p class="fs-5 fw-semibold text-dark mb-0">{{ $siswa->nomor_hp ?? '-' }}</p>
+                    </div>
+                    </div>  
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-muted small text-uppercase">Tempat Lahir</label>
+                            <input type="text" name="tempat_lahir" class="form-control" value="{{ $siswa->tempat_lahir }}" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-muted small text-uppercase">Tanggal Lahir</label>
+                            <input type="date" name="tanggal_lahir" class="form-control" value="{{ $siswa->tanggal_lahir }}" required>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label fw-bold text-muted small text-uppercase">Agama</label>
+                            <select name="agama" class="form-select" required>
+                                <option value="Islam" {{ $siswa->agama == 'Islam' ? 'selected' : '' }}>Islam</option>
+                                <option value="Kristen Protestan" {{ $siswa->agama == 'Kristen Protestan' ? 'selected' : '' }}>Kristen Protestan</option>
+                                <option value="Kristen Katolik" {{ $siswa->agama == 'Kristen Katolik' ? 'selected' : '' }}>Kristen Katolik</option>
+                                <option value="Hindu" {{ $siswa->agama == 'Hindu' ? 'selected' : '' }}>Hindu</option>
+                                <option value="Buddha" {{ $siswa->agama == 'Buddha' ? 'selected' : '' }}>Buddha</option>
+                                <option value="Konghucu" {{ $siswa->agama == 'Konghucu' ? 'selected' : '' }}>Konghucu</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-muted small text-uppercase">Alamat Lengkap</label>
+                        <textarea name="alamat" class="form-control" rows="3" required>{{ $siswa->alamat }}</textarea>
+                    </div>
+                </div>
+                
+                <div class="modal-footer border-0 p-4 pt-0">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-4 shadow-sm" style="background: linear-gradient(135deg, #4f46e5, #7c3aed); border: none;">
+                        Simpan Perubahan
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>

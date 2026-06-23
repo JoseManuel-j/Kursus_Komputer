@@ -131,6 +131,9 @@ Route::middleware('auth')->group(function () {
         return view('admin.siswa_detail', compact('siswa', 'pendaftaran'));
     });
 
+    // PROSES UPDATE DATA SISWA OLEH ADMIN
+    Route::put('/admin/siswa/{id}/update', [AuthController::class, 'updateSiswaByAdmin']);
+
     // 4. Program Kursus
     Route::get('/admin/program', function () {
         if (Auth::user()->role !== 'admin') return redirect('/dashboard');

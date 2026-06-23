@@ -18,7 +18,6 @@ class AuthController extends Controller
     // REGISTER PROCESS
     public function register(Request $request)
     {
-        // 1. Validasi input ditambah dengan field biodata baru
         $request->validate([
             'name'          => 'required',
             'email'         => 'required|email|unique:users', 
@@ -30,7 +29,6 @@ class AuthController extends Controller
             'password'      => 'required|min:8|confirmed' 
         ]);
 
-        // 2. Menyimpan user baru ke database beserta biodatanya
         User::create([
             'name'          => $request->name,
             'email'         => $request->email,
@@ -38,12 +36,11 @@ class AuthController extends Controller
             'tanggal_lahir' => $request->tanggal_lahir,
             'agama'         => $request->agama,
             'alamat'        => $request->alamat,
-            'Phone'      => $request->phone, // Pastikan nama kolom di database kamu adalah 'nomor_hp'
+            'nomor_hp'      => $request->phone, // Diperbaiki: Harus 'nomor_hp'
             'password'      => Hash::make($request->password),
-            'role'          => 'siswa' // Role default untuk registrasi
+            'role'          => 'siswa'
         ]);
 
-        // 3. Redirect ke login dengan notifikasi sukses
         return redirect('/login')->with('success', 'Akun berhasil dibuat! Silakan Login.');
     }
 
@@ -61,11 +58,8 @@ class AuthController extends Controller
             'password' => $request->password
         ];
 
-        // Cek kredensial
         if (Auth::attempt($data)) {
             $request->session()->regenerate();
-
-            // Cek role untuk menentukan tujuan dashboard
             $role = Auth::user()->role;
 
             if ($role === 'admin') {
@@ -77,7 +71,6 @@ class AuthController extends Controller
             return redirect('/dashboard')->with('success', 'Selamat datang kembali, ' . Auth::user()->name . '!');
         }
 
-        // Jika gagal
         return back()->with('error', 'Email atau password salah.');
     }
 
@@ -87,14 +80,39 @@ class AuthController extends Controller
         return view('dashboard');
     }
 
-    // LOGOUT (Sesuai keamanan standar Laravel)
+    // LOGOUT
     public function logout(Request $request)
     {
         Auth::logout();
-        
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
         return redirect('/login')->with('success', 'Anda telah berhasil logout.');
     }
-}
+
+    // UPDATE DATA SISWA OLEH ADMIN
+    public function updateSiswaByAdmin(Request $request, $id)
+    {
+        $request->validate([
+            'name'          => 'required|string|max:255',
+            'nomor_hp'      => 'required|min:10|max:13',
+            'tempat_lahir'  => 'required|string',
+            'tanggal_lahir' => 'required|date',
+            'agama'         => 'required|string',
+            'alamat'        => 'required|string',
+        ]);
+
+        $siswa = User::findOrFail($id);
+        
+        $siswa->update([
+            'name'          => $request->name,
+            'nomor_hp'      => $request->phone,
+            'tempat_lahir'  => $request->tempat_lahir,
+            'tanggal_lahir' => $request->tanggal_lahir,
+            'agama'         => $request->agama,
+            'alamat'        => $request->alamat,
+        ]);
+
+        return back()->with('success', 'Data biodata siswa berhasil diperbarui oleh Admin!');
+    }
+} // Tanda kurung kurawal penutup class sekarang sudah benar di paling bawah
