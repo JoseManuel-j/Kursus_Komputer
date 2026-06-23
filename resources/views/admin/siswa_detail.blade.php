@@ -154,29 +154,31 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold text-muted small text-uppercase">Nama Lengkap</label>
-                            <input type="text" name="name" class="form-control" value="{{ $siswa->name }}" required>
+                            <input type="text" name="name" class="form-control" value="{{ $siswa->name }}">
                         </div>
-                    <div class="col-md-6 mb-4">
-                        <label class="text-muted small fw-bold text-uppercase mb-1">Nomor HP</label>
-                        <p class="fs-5 fw-semibold text-dark mb-0">{{ $siswa->nomor_hp ?? '-' }}</p>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold text-muted small text-uppercase">Nomor HP</label>
+                        <input type="text" name="nomor_hp" class="form-control" value="{{ $siswa->nomor_hp }}">
                     </div>
+
                     </div>  
 
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold text-muted small text-uppercase">Tempat Lahir</label>
-                            <input type="text" name="tempat_lahir" class="form-control" value="{{ $siswa->tempat_lahir }}" required>
+                            <input type="text" name="tempat_lahir" class="form-control" value="{{ $siswa->tempat_lahir }}">
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold text-muted small text-uppercase">Tanggal Lahir</label>
-                            <input type="date" name="tanggal_lahir" class="form-control" value="{{ $siswa->tanggal_lahir }}" required>
+                            <input type="date" name="tanggal_lahir" class="form-control" value="{{ $siswa->tanggal_lahir }}">
                         </div>
                     </div>
 
                     <div class="row">
                         <div class="col-md-12 mb-3">
                             <label class="form-label fw-bold text-muted small text-uppercase">Agama</label>
-                            <select name="agama" class="form-select" required>
+                            <select name="agama" class="form-select">
                                 <option value="Islam" {{ $siswa->agama == 'Islam' ? 'selected' : '' }}>Islam</option>
                                 <option value="Kristen Protestan" {{ $siswa->agama == 'Kristen Protestan' ? 'selected' : '' }}>Kristen Protestan</option>
                                 <option value="Kristen Katolik" {{ $siswa->agama == 'Kristen Katolik' ? 'selected' : '' }}>Kristen Katolik</option>
@@ -189,7 +191,7 @@
 
                     <div class="mb-3">
                         <label class="form-label fw-bold text-muted small text-uppercase">Alamat Lengkap</label>
-                        <textarea name="alamat" class="form-control" rows="3" required>{{ $siswa->alamat }}</textarea>
+                        <textarea name="alamat" class="form-control" rows="3">{{ $siswa->alamat }}</textarea>
                     </div>
                 </div>
                 

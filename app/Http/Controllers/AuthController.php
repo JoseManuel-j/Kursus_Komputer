@@ -25,7 +25,7 @@ class AuthController extends Controller
             'tanggal_lahir' => 'required|date',
             'agama'         => 'required',
             'alamat'        => 'required',
-            'phone'         => 'required|min:10|max:13', 
+            'nomor_hp'      => 'required|min:10|max:13', 
             'password'      => 'required|min:8|confirmed' 
         ]);
 
@@ -36,7 +36,7 @@ class AuthController extends Controller
             'tanggal_lahir' => $request->tanggal_lahir,
             'agama'         => $request->agama,
             'alamat'        => $request->alamat,
-            'nomor_hp'      => $request->phone, // Diperbaiki: Harus 'nomor_hp'
+            'nomor_hp'      => $request->nomor_hp, // Diperbaiki: Harus 'nomor_hp'
             'password'      => Hash::make($request->password),
             'role'          => 'siswa'
         ]);
@@ -91,22 +91,25 @@ class AuthController extends Controller
     }
 
     // UPDATE DATA SISWA OLEH ADMIN
+   // UPDATE DATA SISWA OLEH ADMIN
     public function updateSiswaByAdmin(Request $request, $id)
     {
+        // 1. Ubah validasi ke 'nullable' agar admin bisa edit sebagian data saja
         $request->validate([
             'name'          => 'required|string|max:255',
-            'nomor_hp'      => 'required|min:10|max:13',
-            'tempat_lahir'  => 'required|string',
-            'tanggal_lahir' => 'required|date',
-            'agama'         => 'required|string',
-            'alamat'        => 'required|string',
+            'nomor_hp'      => 'nullable|min:10|max:13',
+            'tempat_lahir'  => 'nullable|string',
+            'tanggal_lahir' => 'nullable|date',
+            'agama'         => 'nullable|string',
+            'alamat'        => 'nullable|string',
         ]);
 
         $siswa = User::findOrFail($id);
         
+        // 2. Update data
         $siswa->update([
             'name'          => $request->name,
-            'nomor_hp'      => $request->phone,
+            'nomor_hp'      => $request->nomor_hp,
             'tempat_lahir'  => $request->tempat_lahir,
             'tanggal_lahir' => $request->tanggal_lahir,
             'agama'         => $request->agama,
@@ -115,4 +118,4 @@ class AuthController extends Controller
 
         return back()->with('success', 'Data biodata siswa berhasil diperbarui oleh Admin!');
     }
-} // Tanda kurung kurawal penutup class sekarang sudah benar di paling bawah
+} 
