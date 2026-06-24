@@ -90,8 +90,25 @@ class AuthController extends Controller
         return redirect('/login')->with('success', 'Anda telah berhasil logout.');
     }
 
+    // --- FITUR LUPA PASSWORD (TAMBAHAN) ---
+    
+    // 1. Menampilkan halaman input email saja
+    public function showForgotPassword()
+    {
+        return view('forgot-password');
+    }
+
+    // 2. Aksi verifikasi email (sementara dikembalikan ke halaman dengan alert)
+    public function sendResetLink(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email'
+        ]);
+
+        return back()->with('success', 'Email berhasil diverifikasi! Sistem pengiriman kode dikesampingkan dulu.');
+    }
+
     // UPDATE DATA SISWA OLEH ADMIN
-   // UPDATE DATA SISWA OLEH ADMIN
     public function updateSiswaByAdmin(Request $request, $id)
     {
         // 1. Ubah validasi ke 'nullable' agar admin bisa edit sebagian data saja
@@ -118,4 +135,4 @@ class AuthController extends Controller
 
         return back()->with('success', 'Data biodata siswa berhasil diperbarui oleh Admin!');
     }
-} 
+}

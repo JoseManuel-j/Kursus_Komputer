@@ -25,6 +25,12 @@ Route::post('/login', [AuthController::class, 'login']);
 
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout'); 
 
+// MENAMPILKAN HALAMAN FORM LUPA PASSWORD (TAMBAHAN)
+Route::get('/forgot-password', [AuthController::class, 'showForgotPassword'])->name('password.request');
+
+// PROSES VERIFIKASI EMAIL (TAMBAHAN)
+Route::post('/forgot-password', [AuthController::class, 'sendResetLink'])->name('password.email');
+
 /*
 |--------------------------------------------------------------------------
 | DASHBOARD & PROFILE SISWA

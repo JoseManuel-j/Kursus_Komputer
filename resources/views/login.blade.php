@@ -6,6 +6,7 @@
     <title>Login</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     
+    
     <style>
         body {
             background: linear-gradient(to right, #4f46e5, #7c3aed);
@@ -66,13 +67,17 @@
             <label class="custom-label">Password</label>
             <input type="password"
                    name="password"
-                   class="form-control mb-4"
+                   class="form-control mb-3"
                    placeholder="Password" required>
         </div>
 
         <button type="submit" class="btn btn-dark w-100">
             Login
         </button>
+
+        <div class="mb-3 text-center">
+            <a href="/forgot-password" class="text-decoration-none small">Lupa password?</a>
+        </div>
 
     </form>
 
