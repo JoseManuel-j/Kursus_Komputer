@@ -10,12 +10,12 @@
         body {
             background-color: #ffffff;
             font-family: sans-serif;
-            min-height: 100vh; /* Diubah agar halaman bisa di-scroll jika layar kecil */
+            min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             margin: 0;
-            padding: 40px 15px; /* Tambahan padding atas bawah */
+            padding: 40px 15px;
             position: relative; 
         }
 
@@ -24,7 +24,7 @@
             border-radius: 15px;
             overflow: hidden;
             width: 100%;
-            max-width: 600px; /* Diperlebar agar muat 2 kolom */
+            max-width: 600px;
         }
 
         .custom-card-header {
@@ -87,9 +87,21 @@
         
         <div class="custom-card-body">
             
+            <!-- ALERT JIKA REGISTRASI SUKSES -->
             @if(session('success'))
                 <div class="alert alert-success text-center">
                     {{ session('success') }}
+                </div>
+            @endif
+
+            <!-- PANTAUAN ERROR VALIDASI (TAMBAHAN PENTING) -->
+            @if($errors->any())
+                <div class="alert alert-danger small">
+                    <ul class="mb-0">
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
                 </div>
             @endif
 
@@ -99,22 +111,22 @@
                 <div class="row">
                     <div class="col-md-6">
                         <label class="custom-label">Nama Lengkap</label>
-                        <input type="text" name="name" class="form-control custom-input" required minlength="3" placeholder="Budi Santoso">
+                        <input type="text" name="name" class="form-control custom-input" value="{{ old('name') }}" required minlength="3" placeholder="Budi Santoso">
                     </div>
                     <div class="col-md-6">
                         <label class="custom-label">Email</label>
-                        <input type="email" name="email" class="form-control custom-input" required placeholder="nama@gmail.com">
+                        <input type="email" name="email" class="form-control custom-input" value="{{ old('email') }}" required placeholder="nama@gmail.com">
                     </div>
                 </div>
 
                 <div class="row">
                     <div class="col-md-6">
                         <label class="custom-label">Tempat Lahir</label>
-                        <input type="text" name="tempat_lahir" class="form-control custom-input" required placeholder="Contoh: Tangerang">
+                        <input type="text" name="tempat_lahir" class="form-control custom-input" value="{{ old('tempat_lahir') }}" required placeholder="Contoh: Tangerang">
                     </div>
                     <div class="col-md-6">
                         <label class="custom-label">Tanggal Lahir</label>
-                        <input type="date" name="tanggal_lahir" class="form-control custom-input" required>
+                        <input type="date" name="tanggal_lahir" class="form-control custom-input" value="{{ old('tanggal_lahir') }}" required>
                     </div>
                 </div>
 
@@ -123,23 +135,24 @@
                         <label class="custom-label">Agama</label>
                         <select name="agama" class="form-select custom-input" required>
                             <option value="" disabled selected>-- Pilih Agama --</option>
-                            <option value="Islam">Islam</option>
-                            <option value="Kristen Protestan">Kristen Protestan</option>
-                            <option value="Kristen Katolik">Kristen Katolik</option>
-                            <option value="Hindu">Hindu</option>
-                            <option value="Buddha">Buddha</option>
-                            <option value="Konghucu">Konghucu</option>
+                            <option value="Islam" {{ old('agama') == 'Islam' ? 'selected' : '' }}>Islam</option>
+                            <option value="Kristen Protestan" {{ old('agama') == 'Kristen Protestan' ? 'selected' : '' }}>Kristen Protestan</option>
+                            <option value="Kristen Katolik" {{ old('agama') == 'Kristen Katolik' ? 'selected' : '' }}>Kristen Katolik</option>
+                            <option value="Hindu" {{ old('agama') == 'Hindu' ? 'selected' : '' }}>Hindu</option>
+                            <option value="Buddha" {{ old('agama') == 'Buddha' ? 'selected' : '' }}>Buddha</option>
+                            <option value="Konghucu" {{ old('agama') == 'Konghucu' ? 'selected' : '' }}>Konghucu</option>
                         </select>
                     </div>
                     <div class="col-md-6">
                         <label class="custom-label">Nomor HP</label>
-                        <input type="tel" name="phone" class="form-control custom-input" required minlength="10" maxlength="13" placeholder="081234567890">
+                        <!-- REVISI UTAMA: name diganti dari 'phone' menjadi 'nomor_hp' -->
+                        <input type="tel" name="nomor_hp" class="form-control custom-input" value="{{ old('nomor_hp') }}" required minlength="10" maxlength="13" placeholder="081234567890">
                     </div>
                 </div>
 
                 <div>
                     <label class="custom-label">Alamat Lengkap</label>
-                    <textarea name="alamat" class="form-control custom-input" rows="2" required placeholder="Jalan, RT/RW, Kelurahan, Kecamatan..."></textarea>
+                    <textarea name="alamat" class="form-control custom-input" rows="2" required placeholder="Jalan, RT/RW, Kelurahan, Kecamatan...">{{ old('alamat') }}</textarea>
                 </div>
 
                 <div class="row">

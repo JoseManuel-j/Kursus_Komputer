@@ -6,7 +6,6 @@
     <title>Login</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     
-    
     <style>
         body {
             background: linear-gradient(to right, #4f46e5, #7c3aed);
@@ -36,7 +35,8 @@
 </head>
 <body>
 
-<a href="javascript:history.back()" class="btn btn-light position-absolute top-0 start-0 m-4 shadow-sm" style="border-radius: 8px;">
+<!-- REVISI DI SINI: Mengubah href agar langsung mengarah ke halaman utama (/) atau dashboard -->
+<a href="{{ url('/') }}" class="btn btn-light position-absolute top-0 start-0 m-4 shadow-sm" style="border-radius: 8px;">
     &larr; Back
 </a>
 
@@ -71,11 +71,11 @@
                    placeholder="Password" required>
         </div>
 
-        <button type="submit" class="btn btn-dark w-100">
+        <button type="submit" class="btn btn-dark w-100 mb-3"> <!-- Ditambahkan mb-3 agar ada jarak dengan text bawah -->
             Login
         </button>
 
-        <div class="mb-3 text-center">
+        <div class="text-center">
             <a href="/forgot-password" class="text-decoration-none small">Lupa password?</a>
         </div>
 

@@ -11,6 +11,7 @@
         .payment-box { background: #f8f9fa; border-radius: 15px; padding: 20px; border: 1px solid #e9ecef; }
         .section-title { font-weight: 600; font-size: 18px; margin-bottom: 15px; border-bottom: 2px solid #f0f0f0; padding-bottom: 8px; margin-top: 20px; }
         .form-label { font-weight: 500; font-size: 14px; color: #444; }
+        .summary-box { background: #eef2ff; border: 1px dashed #4f46e5; border-radius: 12px; padding: 15px; }
     </style>
 </head>
 <body>
@@ -85,10 +86,11 @@
 
             <div class="mb-4">
                 <label class="form-label">Pilih Kelas</label>
-                <select name="program_id" class="form-select" required>
-                    <option value="" disabled>-- Pilih Program Kursus --</option>
+                <!-- Ditambahkan id="program_select" untuk kebutuhan manipulasi Javascript -->
+                <select name="program_id" id="program_select" class="form-select" required>
+                    <option value="" disabled {{ is_null($programTerpilih) ? 'selected' : '' }}>-- Pilih Program Kursus --</option>
                     @foreach($semuaProgram as $prog)
-                        <option value="{{ $prog->id }}" {{ $prog->id == $programTerpilih ? 'selected' : '' }}>
+                        <option value="{{ $prog->id }}" data-biaya="{{ $prog->biaya }}" {{ $prog->id == $programTerpilih ? 'selected' : '' }}>
                             {{ $prog->nama_program }} ({{ ucfirst($prog->tipe_kelas) }}) - Rp {{ number_format($prog->biaya, 0, ',', '.') }}
                         </option>
                     @endforeach
@@ -110,9 +112,27 @@
                 </div>
             </div>
 
-            <div class="section-title">C. Metode Pembayaran</div>
+            <!-- REVISI: MENAMBAHKAN RINCIAN RINGKASAN BIAYA (HARGA KELAS + PENDAFTARAN) -->
+            <div class="section-title">C. Rincian & Metode Pembayaran</div>
 
             <div class="payment-box">
+                <div class="summary-box mb-4">
+                    <h6 class="fw-bold text-indigo mb-3" style="color: #4f46e5;">Rincian Biaya Kursus</h6>
+                    <div class="d-flex justify-content-between mb-2 fs-6">
+                        <span class="text-muted">Biaya Program Kelas:</span>
+                        <span id="text_biaya_kelas" class="fw-medium">Rp 0</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2 fs-6">
+                        <span class="text-muted">Biaya Pendaftaran (Wajib):</span>
+                        <span class="fw-medium text-success">+ Rp 100.000</span>
+                    </div>
+                    <hr class="my-2">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="fw-bold">Total yang Harus Ditransfer:</span>
+                        <span id="text_total_bayar" class="fw-bold fs-5 text-primary">Rp 100.000</span>
+                    </div>
+                </div>
+
                 <div class="row">
                     <div class="col-md-6 mb-3 mb-md-0 border-end">
                         <h5 class="fw-bold mb-3">Transfer Bank</h5>
@@ -120,11 +140,10 @@
                         <p class="mb-1 fw-bold fs-5">1234 5678 90</p>
                         <p class="mb-0">A/N LPK Phitagoras</p>
                     </div>
-                <div class="col-md-6 text-center">
-                    <h5 class="fw-bold mb-3">QRIS</h5>
-                    <img src="{{ asset('images/qris-phitagoras.jpeg') }}" width="200" alt="QRIS LPK Phitagoras" class="border p-1 rounded bg-white shadow-sm">
-                </div>
-                
+                    <div class="col-md-6 text-center">
+                        <h5 class="fw-bold mb-3">QRIS</h5>
+                        <img src="{{ asset('images/qris-phitagoras.jpeg') }}" width="200" alt="QRIS LPK Phitagoras" class="border p-1 rounded bg-white shadow-sm">
+                    </div>
                 </div>
 
                 <hr>
@@ -132,7 +151,7 @@
                 <div class="mt-3">
                     <label class="form-label fw-bold">Upload Bukti Pembayaran (Maks 2MB)</label>
                     <input type="file" name="bukti_pembayaran" class="form-control" accept="image/*, .pdf" required>
-                    <small class="text-muted">Pastikan bukti transfer terlihat jelas.</small>
+                    <small class="text-muted">Pastikan bukti transfer senilai dengan jumlah <strong>Total yang Harus Ditransfer</strong> di atas.</small>
                 </div>
             </div>
 
@@ -144,6 +163,38 @@
 
     </div>
 </div>
+
+<!-- JAVASCRIPT HINGGA AKHIR FILE UNTUK LOGIKA HITUNG OTOMATIS -->
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const selectProgram = document.getElementById("program_select");
+        const textBiayaKelas = document.getElementById("text_biaya_kelas");
+        const textTotalBayar = document.getElementById("text_total_bayar");
+        const biayaPendaftaran = 100000;
+
+        function hitungTotal() {
+            const selectedOption = selectProgram.options[selectProgram.selectedIndex];
+            
+            if (selectedOption && selectedOption.value !== "") {
+                const biayaKelas = parseInt(selectedOption.getAttribute("data-biaya")) || 0;
+                const totalBayar = biayaKelas + biayaPendaftaran;
+
+                // Format ke Rupiah string
+                textBiayaKelas.innerText = "Rp " + biayaKelas.toLocaleString("id-ID");
+                textTotalBayar.innerText = "Rp " + totalBayar.toLocaleString("id-ID");
+            } else {
+                textBiayaKelas.innerText = "Rp 0";
+                textTotalBayar.innerText = "Rp " + biayaPendaftaran.toLocaleString("id-ID");
+            }
+        }
+
+        // Jalankan fungsi saat halaman pertama kali dimuat (jika sudah ada program terpilih)
+        hitungTotal();
+
+        // Jalankan fungsi setiap kali pilihan kelas dirubah
+        selectProgram.addEventListener("change", hitungTotal);
+    });
+</script>
 
 </body>
 </html>
