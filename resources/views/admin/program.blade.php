@@ -6,7 +6,10 @@
 
 @section('content')
 <div class="d-flex justify-content-end mb-4">
-    <button class="btn btn-primary"><i class="fa fa-plus me-2"></i> Tambah Kelas</button>
+    <a href="{{ route('admin.program.create') }}" class="btn btn-primary">
+        <i class="fa fa-plus me-2"></i>
+        Tambah Kelas
+    </a>
 </div>
 
 <div class="card border-0 shadow-sm" style="border-radius: 20px; overflow: hidden;">

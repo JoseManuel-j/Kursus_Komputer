@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PendaftaranController;
 use Illuminate\Http\Request;
+use App\Http\Controllers\AdminProgramController;
 
 Route::get('/', function () {
     return view('home');
@@ -141,12 +142,17 @@ Route::middleware('auth')->group(function () {
     Route::put('/admin/siswa/{id}/update', [AuthController::class, 'updateSiswaByAdmin']);
 
     // 4. Program Kursus
-    Route::get('/admin/program', function () {
-        if (Auth::user()->role !== 'admin') return redirect('/dashboard');
-        
-        $programs = DB::table('program_kursus')->orderBy('id', 'asc')->get();
-        return view('admin.program', compact('programs'));
-    });
+    Route::get('/admin/program', [AdminProgramController::class, 'index'])
+        ->middleware('auth')
+        ->name('admin.program');
+
+    Route::get('/admin/program/tambah', [AdminProgramController::class, 'create'])
+        ->middleware('auth')
+        ->name('admin.program.create');
+
+    Route::post('/admin/program/simpan', [AdminProgramController::class, 'store'])
+        ->middleware('auth')
+        ->name('admin.program.store');
 
     // 5. Tagihan & Bukti Pembayaran
     Route::get('/admin/tagihan', function () {
