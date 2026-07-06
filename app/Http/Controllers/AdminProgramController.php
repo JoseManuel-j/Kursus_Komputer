@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 
 class AdminProgramController extends Controller
 {
+    // Menampilkan daftar program kursus
     public function index()
     {
         $programs = ProgramKursus::orderBy('id', 'asc')->get();
@@ -14,31 +15,55 @@ class AdminProgramController extends Controller
         return view('admin.program', compact('programs'));
     }
 
+    // Menampilkan halaman tambah program
     public function create()
     {
         return view('admin.tambah-program');
     }
 
+    // Menyimpan program baru
     public function store(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'nama_program' => 'required|string|max:255',
-            'tipe_kelas' => 'required|string|max:255',
-            'deskripsi' => 'required|string',
-            'jumlah_sesi' => 'required|integer|min:1',
-            'biaya' => 'required|numeric|min:0',
+            'tipe_kelas'   => 'required|string|max:255',
+            'deskripsi'     => 'required|string',
+            'jumlah_sesi'   => 'required|integer|min:1',
+            'biaya'         => 'required|numeric|min:0',
         ]);
 
-        ProgramKursus::create([
-            'nama_program' => $request->nama_program,
-            'tipe_kelas' => $request->tipe_kelas,
-            'deskripsi' => $request->deskripsi,
-            'jumlah_sesi' => $request->jumlah_sesi,
-            'biaya' => $request->biaya,
-        ]);
+        ProgramKursus::create($validated);
 
         return redirect()
             ->route('admin.program')
             ->with('success', 'Program kursus berhasil ditambahkan!');
+    }
+
+    // Menampilkan halaman edit program
+    public function edit($id)
+    {
+        $program = ProgramKursus::findOrFail($id);
+
+        return view('admin.edit-program', compact('program'));
+    }
+
+    // Memperbarui data program
+    public function update(Request $request, $id)
+    {
+        $program = ProgramKursus::findOrFail($id);
+
+        $validated = $request->validate([
+            'nama_program' => 'required|string|max:255',
+            'tipe_kelas'   => 'required|string|max:255',
+            'deskripsi'     => 'required|string',
+            'jumlah_sesi'   => 'required|integer|min:1',
+            'biaya'         => 'required|numeric|min:0',
+        ]);
+
+        $program->update($validated);
+
+        return redirect()
+            ->route('admin.program')
+            ->with('success', 'Program kursus berhasil diperbarui!');
     }
 }

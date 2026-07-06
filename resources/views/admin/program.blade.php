@@ -6,10 +6,7 @@
 
 @section('content')
 <div class="d-flex justify-content-end mb-4">
-    <a href="{{ route('admin.program.create') }}" class="btn btn-primary">
-        <i class="fa fa-plus me-2"></i>
-        Tambah Kelas
-    </a>
+    <button class="btn btn-primary"><i class="fa fa-plus me-2"></i> Tambah Kelas</button>
 </div>
 
 <div class="card border-0 shadow-sm" style="border-radius: 20px; overflow: hidden;">
@@ -39,7 +36,11 @@
                     <td class="py-3 px-4 fw-bold text-success">{{ number_format($program->biaya, 0, ',', '.') }}</td>
                     <td class="py-3 px-4 text-center">
                         <div class="btn-group">
-                            <button class="btn btn-sm btn-outline-warning"><i class="fa fa-edit"></i></button>
+                            <a href="{{ route('admin.program.edit', $program->id) }}"
+                                class="btn btn-sm btn-outline-warning"
+                                title="Edit Program">
+                                    <i class="fa fa-edit"></i>
+                                </a>
                             <button class="btn btn-sm btn-outline-danger"><i class="fa fa-trash"></i></button>
                         </div>
                     </td>
