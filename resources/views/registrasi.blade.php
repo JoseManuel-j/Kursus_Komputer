@@ -149,8 +149,8 @@
                 <hr>
 
                 <div class="mt-3">
-                    <label class="form-label fw-bold">Upload Bukti Pembayaran (Maks 2MB)</label>
-                    <input type="file" name="bukti_pembayaran" class="form-control" accept="image/*, .pdf" required>
+                    <label class="form-label fw-bold">Upload Bukti Pembayaran (JPG/PNG/PDF, Maks 2MB)</label>
+                    <input type="file" name="bukti_bayar" class="form-control" accept="image/jpeg,image/png,application/pdf" required>
                     <small class="text-muted">Pastikan bukti transfer senilai dengan jumlah <strong>Total yang Harus Ditransfer</strong> di atas.</small>
                 </div>
             </div>
@@ -174,7 +174,7 @@
 
         function hitungTotal() {
             const selectedOption = selectProgram.options[selectProgram.selectedIndex];
-            
+
             if (selectedOption && selectedOption.value !== "") {
                 const biayaKelas = parseInt(selectedOption.getAttribute("data-biaya")) || 0;
                 const totalBayar = biayaKelas + biayaPendaftaran;

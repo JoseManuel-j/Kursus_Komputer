@@ -22,7 +22,7 @@
                     
                     <div class="position-absolute" style="top: -50px; left: 40px;">
                         @php
-                            $avatarUrl = ($pendaftaran && $pendaftaran->pas_foto) 
+                            $avatarUrl = (!empty($pendaftaran->pas_foto ?? null)) 
                                 ? asset('uploads/dokumen_siswa/' . $pendaftaran->pas_foto) 
                                 : 'https://ui-avatars.com/api/?name=' . urlencode($siswa->name) . '&background=ffffff&color=4f46e5&size=100&bold=true';
                         @endphp
@@ -111,13 +111,13 @@
                             <div class="col-md-6 mb-4">
                                 <label class="text-muted small fw-bold text-uppercase mb-1">Berkas Lampiran</label>
                                 <div class="d-flex gap-2 mt-1">
-                                    @if($pendaftaran->file_ktp)
+                                    @if(!empty($pendaftaran->file_ktp ?? null))
                                         <a href="{{ asset('uploads/dokumen_siswa/' . $pendaftaran->file_ktp) }}" target="_blank" class="btn btn-sm btn-outline-primary fw-bold">
                                             <i class="fa fa-file-pdf me-1"></i> KTP
                                         </a>
                                     @endif
                                     
-                                    @if($pendaftaran->file_ijazah)
+                                    @if(!empty($pendaftaran->file_ijazah ?? null))
                                         <a href="{{ asset('uploads/dokumen_siswa/' . $pendaftaran->file_ijazah) }}" target="_blank" class="btn btn-sm btn-outline-primary fw-bold">
                                             <i class="fa fa-file-pdf me-1"></i> Ijazah
                                         </a>

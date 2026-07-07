@@ -3,23 +3,14 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Http\Request;
-
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PendaftaranController;
+use Illuminate\Http\Request;
 use App\Http\Controllers\AdminProgramController;
-
-
-/*
-|--------------------------------------------------------------------------
-| HALAMAN UTAMA
-|--------------------------------------------------------------------------
-*/
 
 Route::get('/', function () {
     return view('home');
 });
-
 
 /*
 |--------------------------------------------------------------------------
@@ -30,24 +21,16 @@ Route::get('/', function () {
 Route::get('/register', [AuthController::class, 'showRegister']);
 Route::post('/register', [AuthController::class, 'register']);
 
-Route::get('/login', [AuthController::class, 'showLogin'])
-    ->name('login');
-
+Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
 
-Route::post('/logout', [AuthController::class, 'logout'])
-    ->name('logout');
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout'); 
 
+// MENAMPILKAN HALAMAN FORM LUPA PASSWORD (TAMBAHAN)
+Route::get('/forgot-password', [AuthController::class, 'showForgotPassword'])->name('password.request');
 
-// Halaman lupa password
-Route::get('/forgot-password', [AuthController::class, 'showForgotPassword'])
-    ->name('password.request');
-
-
-// Proses verifikasi email
-Route::post('/forgot-password', [AuthController::class, 'sendResetLink'])
-    ->name('password.email');
-
+// PROSES VERIFIKASI EMAIL (TAMBAHAN)
+Route::post('/forgot-password', [AuthController::class, 'sendResetLink'])->name('password.email');
 
 /*
 |--------------------------------------------------------------------------
@@ -55,112 +38,58 @@ Route::post('/forgot-password', [AuthController::class, 'sendResetLink'])
 |--------------------------------------------------------------------------
 */
 
-Route::get('/dashboard', [AuthController::class, 'dashboard'])
-    ->middleware('auth')
-    ->name('dashboard');
-
+Route::get('/dashboard', [AuthController::class, 'dashboard'])->middleware('auth')->name('dashboard');
 
 Route::get('/profile', function () {
-
     return view('profile');
-
-})
-    ->middleware('auth')
-    ->name('profile');
-
+})->middleware('auth')->name('profile');
 
 /*
 |--------------------------------------------------------------------------
-| KELAS & PENDAFTARAN SISWA
+| KELAS & PENDAFTARAN (SISWA)
 |--------------------------------------------------------------------------
 */
 
 Route::middleware('auth')->group(function () {
-
     Route::get('/kelas', function (Request $request) {
-
-        $userId = Auth::id();
-
+        $userId = Auth::id(); 
         $search = $request->input('search');
-
         $kategori = $request->input('kategori');
 
-
-        // Cek status pendaftaran siswa
+        // Cek status pendaftaran
         $kelasAktif = DB::table('pendaftaran')
             ->where('user_id', $userId)
             ->where('status', 'aktif')
             ->first();
 
-
-        // Query program kursus
+        // Query program
         $query = DB::table('program_kursus');
 
-
         if ($kelasAktif) {
-
             $query->where('id', $kelasAktif->program_id);
-
-            $isRegistered = true;
-
+            $isRegistered = true; 
         } else {
-
             $isRegistered = false;
-
         }
 
-
-        // Filter pencarian
-        $programs = $query
-
-            ->when($search, function ($q) use ($search) {
-
-                return $q->where(
-                    'nama_program',
-                    'like',
-                    "%{$search}%"
-                );
-
+        // Terapkan Filter
+        $programs = $query->when($search, function ($q) use ($search) {
+                return $q->where('nama_program', 'like', "%{$search}%");
             })
-
             ->when($kategori, function ($q) use ($kategori) {
-
-                return $q->where(
-                    'tipe_kelas',
-                    $kategori
-                );
-
+                return $q->where('tipe_kelas', $kategori);
             })
-
             ->get();
 
-
-        return view(
-            'kelas',
-            compact(
-                'programs',
-                'isRegistered'
-            )
-        );
-
+        return view('kelas', compact('programs', 'isRegistered')); 
     })->name('kelas');
 
-
-    // Form konfirmasi pendaftaran
-    Route::get(
-        '/pendaftaran/{id}',
-        [PendaftaranController::class, 'index']
-    );
-
-
-    // Proses pendaftaran
-    Route::post(
-        '/pendaftaran',
-        [PendaftaranController::class, 'store']
-    );
-
+    // Nampilin form konfirmasi pendaftaran
+    Route::get('/pendaftaran/{id}', [PendaftaranController::class, 'index']);
+    
+    // Proses pendaftaran dari Dropdown
+    Route::post('/pendaftaran', [PendaftaranController::class, 'store']);
 });
-
 
 /*
 |--------------------------------------------------------------------------
@@ -169,371 +98,130 @@ Route::middleware('auth')->group(function () {
 */
 
 Route::middleware('auth')->group(function () {
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | DASHBOARD ADMIN
-    |--------------------------------------------------------------------------
-    */
-
+    
+    // 1. Dashboard Admin
     Route::get('/admin/dashboard', function () {
+        if (Auth::user()->role !== 'admin') return redirect('/dashboard');
 
-        if (Auth::user()->role !== 'admin') {
+        $totalSiswa = DB::table('users')->where('role', 'siswa')->count();
+        $totalProgram = DB::table('program_kursus')->count();
+        $totalPendaftar = DB::table('pendaftaran')->count();
 
-            return redirect('/dashboard');
-
-        }
-
-
-        $totalSiswa = DB::table('users')
-            ->where('role', 'siswa')
-            ->count();
-
-
-        $totalProgram = DB::table('program_kursus')
-            ->count();
-
-
-        $totalPendaftar = DB::table('pendaftaran')
-            ->count();
-
-
-        return view(
-            'admin.dashboard',
-            compact(
-                'totalSiswa',
-                'totalProgram',
-                'totalPendaftar'
-            )
-        );
-
+        return view('admin.dashboard', compact('totalSiswa', 'totalProgram', 'totalPendaftar'));
     })->name('admin.dashboard');
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | DATA SISWA
-    |--------------------------------------------------------------------------
-    */
-
+    // 2. Data Siswa
     Route::get('/admin/siswa', function () {
-
-        if (Auth::user()->role !== 'admin') {
-
-            return redirect('/dashboard');
-
-        }
-
-
-        $siswas = DB::table('users')
-
-            ->where('role', 'siswa')
-
-            ->orderBy('created_at', 'desc')
-
-            ->get();
-
-
-        return view(
-            'admin.siswa',
-            compact('siswas')
-        );
-
+        if (Auth::user()->role !== 'admin') return redirect('/dashboard');
+        
+        $siswas = DB::table('users')->where('role', 'siswa')->orderBy('created_at', 'desc')->get();
+        return view('admin.siswa', compact('siswas'));
     });
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | DETAIL SISWA
-    |--------------------------------------------------------------------------
-    */
-
+    // 3. Detail siswa
     Route::get('/admin/siswa/{id}', function ($id) {
-
-        if (Auth::user()->role !== 'admin') {
-
-            return redirect('/dashboard');
-
-        }
-
-
-        $siswa = DB::table('users')
-
-            ->where('id', $id)
-
-            ->where('role', 'siswa')
-
-            ->first();
-
+        if (Auth::user()->role !== 'admin') return redirect('/dashboard');
+        
+        $siswa = DB::table('users')->where('id', $id)->where('role', 'siswa')->first();
 
         if (!$siswa) {
-
-            return redirect('/admin/siswa')
-
-                ->with(
-                    'error',
-                    'Data siswa tidak ditemukan.'
-                );
-
+            return redirect('/admin/siswa')->with('error', 'Data siswa tidak ditemukan.');
         }
-
 
         $pendaftaran = DB::table('pendaftaran')
-
-            ->leftJoin(
-                'program_kursus',
-                'pendaftaran.program_id',
-                '=',
-                'program_kursus.id'
-            )
-
-            ->where(
-                'pendaftaran.user_id',
-                $id
-            )
-
-            ->select(
-                'pendaftaran.*',
-                'program_kursus.nama_program'
-            )
-
-            ->orderBy(
-                'pendaftaran.created_at',
-                'desc'
-            )
-
+            ->leftJoin('program_kursus', 'pendaftaran.program_id', '=', 'program_kursus.id')
+            ->where('pendaftaran.user_id', $id)
+            ->select('pendaftaran.*', 'program_kursus.nama_program')
+            ->orderBy('pendaftaran.created_at', 'desc')
             ->first();
 
-
-        return view(
-            'admin.siswa_detail',
-            compact(
-                'siswa',
-                'pendaftaran'
-            )
-        );
-
+        return view('admin.siswa_detail', compact('siswa', 'pendaftaran'));
     });
 
+    // PROSES UPDATE DATA SISWA OLEH ADMIN
+    Route::put('/admin/siswa/{id}/update', [AuthController::class, 'updateSiswaByAdmin']);
 
-    // Update data siswa oleh admin
-    Route::put(
-        '/admin/siswa/{id}/update',
-        [AuthController::class, 'updateSiswaByAdmin']
-    );
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | PROGRAM KURSUS
-    |--------------------------------------------------------------------------
-    */
-
-
-    // Menampilkan daftar program
-    Route::get(
-        '/admin/program',
-        [AdminProgramController::class, 'index']
-    )
+    // 4. Program Kursus
+    Route::get('/admin/program', [AdminProgramController::class, 'index'])
         ->name('admin.program');
 
-
-    // Menampilkan halaman tambah program
-    Route::get(
-        '/admin/program/tambah',
-        [AdminProgramController::class, 'create']
-    )
+    Route::get('/admin/program/tambah', [AdminProgramController::class, 'create'])
         ->name('admin.program.create');
 
-
-    // Menyimpan program baru
-    Route::post(
-        '/admin/program/simpan',
-        [AdminProgramController::class, 'store']
-    )
+    Route::post('/admin/program/simpan', [AdminProgramController::class, 'store'])
         ->name('admin.program.store');
 
-
-    // Menampilkan halaman edit program
-    Route::get(
-        '/admin/program/{id}/edit',
-        [AdminProgramController::class, 'edit']
-    )
+    Route::get('/admin/program/{id}/edit', [AdminProgramController::class, 'edit'])
         ->name('admin.program.edit');
 
+    Route::put('/admin/program/{id}', [AdminProgramController::class, 'update'])
+        ->name('admin.program.update');;
 
-    // Menyimpan perubahan program
-    Route::put(
-        '/admin/program/{id}',
-        [AdminProgramController::class, 'update']
-    )
-        ->name('admin.program.update');
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | TAGIHAN & BUKTI PEMBAYARAN
-    |--------------------------------------------------------------------------
-    */
-
+    // 5. Tagihan & Bukti Pembayaran
     Route::get('/admin/tagihan', function () {
-
-        if (Auth::user()->role !== 'admin') {
-
-            return redirect('/dashboard');
-
-        }
-
-
+        if (Auth::user()->role !== 'admin') return redirect('/dashboard');
+        
         $tagihans = DB::table('tagihan')
-
-            ->join(
-                'pendaftaran',
-                'tagihan.pendaftaran_id',
-                '=',
-                'pendaftaran.id'
-            )
-
-            ->join(
-                'users',
-                'pendaftaran.user_id',
-                '=',
-                'users.id'
-            )
-
-            ->join(
-                'program_kursus',
-                'pendaftaran.program_id',
-                '=',
-                'program_kursus.id'
-            )
-
+            ->join('pendaftaran', 'tagihan.pendaftaran_id', '=', 'pendaftaran.id')
+            ->join('users', 'pendaftaran.user_id', '=', 'users.id')
+            ->join('program_kursus', 'pendaftaran.program_id', '=', 'program_kursus.id')
             ->select(
-
-                'tagihan.id',
-
-                'users.name as nama_siswa',
-
-                'program_kursus.nama_program',
-
-                'tagihan.jumlah',
-
-                'tagihan.status',
-
+                'tagihan.id', 
+                'users.name as nama_siswa', 
+                'program_kursus.nama_program', 
+                'tagihan.jumlah', 
+                'tagihan.status', 
+                'tagihan.buktiTransfer',
                 'tagihan.created_at'
-
             )
-
-            ->orderBy(
-                'tagihan.created_at',
-                'desc'
-            )
-
+            ->orderBy('tagihan.created_at', 'desc')
             ->get();
 
-
-        return view(
-            'admin.tagihan',
-            compact('tagihans')
-        );
-
+        return view('admin.tagihan', compact('tagihans'));
     });
 
+    // 6. Proses Konfirmasi Pembayaran
+    Route::post('/admin/tagihan/{id}/konfirmasi', function ($id) {
+        if (Auth::user()->role !== 'admin') return redirect('/dashboard');
+        
+        DB::table('tagihan')->where('id', $id)->update([
+            'status' => 'lunas',
+            'updated_at' => now()
+        ]);
 
-    /*
-    |--------------------------------------------------------------------------
-    | KONFIRMASI PEMBAYARAN
-    |--------------------------------------------------------------------------
-    */
+        return back()->with('success', 'Pembayaran berhasil dikonfirmasi! Status tagihan sekarang Lunas.');
+    });
 
-    Route::post(
-        '/admin/tagihan/{id}/konfirmasi',
-        function ($id) {
+    // 7. Proses Tolak Bukti Pembayaran (misal buktinya palsu/gak jelas)
+    Route::post('/admin/tagihan/{id}/tolak', function ($id) {
+        if (Auth::user()->role !== 'admin') return redirect('/dashboard');
+        
+        DB::table('tagihan')->where('id', $id)->update([
+            'status' => 'ditolak',
+            'updated_at' => now()
+        ]);
 
-
-            if (Auth::user()->role !== 'admin') {
-
-                return redirect('/dashboard');
-
-            }
-
-
-            DB::table('tagihan')
-
-                ->where('id', $id)
-
-                ->update([
-
-                    'status' => 'lunas',
-
-                    'updated_at' => now()
-
-                ]);
-
-
-            return back()
-
-                ->with(
-
-                    'success',
-
-                    'Pembayaran berhasil dikonfirmasi! Status tagihan sekarang Lunas.'
-
-                );
-
-        }
-    );
-
+        return back()->with('success', 'Bukti pembayaran ditolak. Silakan hubungi siswa untuk upload ulang.');
+    });
 });
-
 
 /*
 |--------------------------------------------------------------------------
 | AREA KHUSUS INSTRUKTUR
 |--------------------------------------------------------------------------
 */
-
 Route::middleware('auth')->group(function () {
-
-
     Route::get('/instruktur/jadwal', function () {
-
-
         if (Auth::user()->role !== 'instruktur') {
-
             return redirect('/dashboard');
-
         }
-
-
+        
         $jadwals = DB::table('jadwal_kelas')
-
-            ->join(
-                'program_kursus',
-                'jadwal_kelas.program_id',
-                '=',
-                'program_kursus.id'
-            )
-
-            ->where(
-                'jadwal_kelas.instruktur_id',
-                Auth::id()
-            )
-
-            ->select(
-                'jadwal_kelas.*',
-                'program_kursus.nama_program'
-            )
-
+            ->join('program_kursus', 'jadwal_kelas.program_id', '=', 'program_kursus.id')
+            ->where('jadwal_kelas.instruktur_id', Auth::id())
+            ->select('jadwal_kelas.*', 'program_kursus.nama_program')
             ->get();
-
-
-        return view(
-            'instruktur.jadwal',
-            compact('jadwals')
-        );
-
+        
+        return view('instruktur.jadwal', compact('jadwals'));
     });
-
 });
