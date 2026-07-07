@@ -168,6 +168,7 @@ Route::middleware('auth')->group(function () {
                 'program_kursus.nama_program', 
                 'tagihan.jumlah', 
                 'tagihan.status', 
+                'tagihan.buktiTransfer',
                 'tagihan.created_at'
             )
             ->orderBy('tagihan.created_at', 'desc')
@@ -186,6 +187,18 @@ Route::middleware('auth')->group(function () {
         ]);
 
         return back()->with('success', 'Pembayaran berhasil dikonfirmasi! Status tagihan sekarang Lunas.');
+    });
+
+    // 7. Proses Tolak Bukti Pembayaran (misal buktinya palsu/gak jelas)
+    Route::post('/admin/tagihan/{id}/tolak', function ($id) {
+        if (Auth::user()->role !== 'admin') return redirect('/dashboard');
+        
+        DB::table('tagihan')->where('id', $id)->update([
+            'status' => 'ditolak',
+            'updated_at' => now()
+        ]);
+
+        return back()->with('success', 'Bukti pembayaran ditolak. Silakan hubungi siswa untuk upload ulang.');
     });
 });
 

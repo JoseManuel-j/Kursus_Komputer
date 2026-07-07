@@ -24,14 +24,47 @@
                     <td class="py-3 px-4 text-muted">{{ $tagihan->nama_program }}</td>
                     <td class="py-3 px-4 fw-semibold">Rp {{ number_format($tagihan->jumlah, 0, ',', '.') }}</td>
                     <td class="py-3 px-4 text-center">
-                        <span class="badge {{ $tagihan->status == 'lunas' ? 'bg-success' : 'bg-warning text-dark' }} rounded-pill px-3">
+                        <span class="badge 
+                            @if($tagihan->status == 'lunas') bg-success
+                            @elseif($tagihan->status == 'ditolak') bg-danger
+                            @else bg-warning text-dark
+                            @endif
+                            rounded-pill px-3">
                             {{ ucfirst($tagihan->status) }}
                         </span>
                     </td>
                     <td class="py-3 px-4 text-center">
                         <div class="btn-group">
-                            <button class="btn btn-sm btn-outline-info rounded-pill px-3 me-2"><i class="fa fa-image me-1"></i> Bukti</button>
-                            <button class="btn btn-sm btn-outline-success rounded-pill px-3"><i class="fa fa-check me-1"></i> Konfirmasi</button>
+                            @if(!empty($tagihan->buktiTransfer))
+                                <a href="{{ asset('uploads/bukti_pembayaran/' . $tagihan->buktiTransfer) }}" target="_blank" class="btn btn-sm btn-outline-info rounded-pill px-3 me-2">
+                                    <i class="fa fa-image me-1"></i> Bukti
+                                </a>
+                            @else
+                                <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3 me-2" disabled>
+                                    <i class="fa fa-image me-1"></i> Belum Ada
+                                </button>
+                            @endif
+
+                            @if($tagihan->status == 'belum_lunas')
+                                <form action="/admin/tagihan/{{ $tagihan->id }}/konfirmasi" method="POST" class="d-inline">
+                                    @csrf
+                                    <button type="submit" class="btn btn-sm btn-outline-success rounded-pill px-3 me-2">
+                                        <i class="fa fa-check me-1"></i> Konfirmasi
+                                    </button>
+                                </form>
+                                <form action="/admin/tagihan/{{ $tagihan->id }}/tolak" method="POST" class="d-inline" onsubmit="return confirm('Yakin mau nolak bukti pembayaran ini? Siswa perlu upload ulang.');">
+                                    @csrf
+                                    <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-3">
+                                        <i class="fa fa-times me-1"></i> Tolak
+                                    </button>
+                                </form>
+                            @elseif($tagihan->status == 'lunas')
+                                <button type="button" class="btn btn-sm btn-outline-success rounded-pill px-3" disabled>
+                                    <i class="fa fa-check me-1"></i> Lunas
+                                </button>
+                            @else
+                                <span class="text-danger small fw-bold">Ditolak</span>
+                            @endif
                         </div>
                     </td>
                 </tr>
