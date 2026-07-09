@@ -2,17 +2,19 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class ProgramKursus extends Model
 {
-    protected $table = 'program_kursus';
+    use HasFactory;
 
-    protected $fillable = [
-        'nama_program',
-        'tipe_kelas',
-        'deskripsi',
-        'jumlah_sesi',
-        'biaya',
-    ];
+    protected $table = 'program_kursus';
+    protected $guarded = ['id'];
+
+    // Relasi ke Jadwal Kelas
+    public function jadwal()
+    {
+        return $this->hasMany(JadwalKelas::class, 'program_kursus_id');
+    }
 }

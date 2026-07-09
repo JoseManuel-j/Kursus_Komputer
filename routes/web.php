@@ -3,10 +3,15 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PendaftaranController;
-use Illuminate\Http\Request;
 use App\Http\Controllers\AdminProgramController;
+
+// ===== TAMBAHAN CONTROLLER BARU UNTUK FITUR JADWAL =====
+use App\Http\Controllers\JadwalController;
+use App\Http\Controllers\SiswaDashboardController;
+// =======================================================
 
 Route::get('/', function () {
     return view('home');
@@ -38,7 +43,11 @@ Route::post('/forgot-password', [AuthController::class, 'sendResetLink'])->name(
 |--------------------------------------------------------------------------
 */
 
-Route::get('/dashboard', [AuthController::class, 'dashboard'])->middleware('auth')->name('dashboard');
+Route::get('/dashboard', [SiswaDashboardController::class, 'index'])->middleware('auth')->name('dashboard');
+
+// ===== TAMBAHAN ROUTE UNTUK DASHBOARD JADWAL SISWA =====
+Route::get('/siswa/dashboard', [SiswaDashboardController::class, 'index'])->middleware('auth')->name('siswa.dashboard');
+// =======================================================
 
 Route::get('/profile', function () {
     return view('profile');
@@ -99,7 +108,7 @@ Route::middleware('auth')->group(function () {
 
 Route::middleware('auth')->group(function () {
     
-    // 1. Dashboard Admin
+// 1. Dashboard Admin
     Route::get('/admin/dashboard', function () {
         if (Auth::user()->role !== 'admin') return redirect('/dashboard');
 
@@ -107,8 +116,52 @@ Route::middleware('auth')->group(function () {
         $totalProgram = DB::table('program_kursus')->count();
         $totalPendaftar = DB::table('pendaftaran')->count();
 
-        return view('admin.dashboard', compact('totalSiswa', 'totalProgram', 'totalPendaftar'));
+        // UBAH MENJADI leftJoin agar baris data tidak hilang jika ada data dummy yang mismatch
+        $pendaftaran = DB::table('pendaftaran')
+            ->leftJoin('users', 'pendaftaran.user_id', '=', 'users.id')
+            ->leftJoin('program_kursus', 'pendaftaran.program_id', '=', 'program_kursus.id')
+            ->select(
+                'pendaftaran.*', 
+                'users.name as nama_siswa', 
+                'program_kursus.nama_program',
+                'program_kursus.biaya as total_biaya_kelas'
+            )
+            ->orderBy('pendaftaran.created_at', 'desc')
+            ->get();
+
+        // LOGIKA PERHITUNGAN SISA BAYAR & PENGAMBILAN JADWAL
+        foreach ($pendaftaran as $item) {
+            // Hitung sisa bayar
+            $totalMasuk = DB::table('tagihan')
+                ->where('pendaftaran_id', $item->id)
+                ->where('status', 'lunas')
+                ->sum('jumlah');
+
+            $item->sisa_bayar = ($item->total_biaya_kelas ?? 0) - $totalMasuk;
+
+            // Ambil data jadwal
+            $item->jadwal = DB::table('jadwal_kelas')
+                ->where('pendaftaran_id', $item->id)
+                ->get();
+        }
+
+        
+
+        return view('admin.dashboard', compact('totalSiswa', 'totalProgram', 'totalPendaftar', 'pendaftaran'));
     })->name('admin.dashboard');
+
+    //Update Status Pembayaran Manual via Dropdown
+        Route::post('/admin/tagihan/{id}/update-status', function ($id) {
+            if (Auth::user()->role !== 'admin') return redirect('/dashboard');
+            
+            DB::table('tagihan')->where('id', $id)->update([
+                'status' => request('status'),
+                'updated_at' => now()
+            ]);
+
+            return back()->with('success', 'Status tagihan berhasil diperbarui!');
+        });
+
 
     // 2. Data Siswa
     Route::get('/admin/siswa', function () {
@@ -155,30 +208,51 @@ Route::middleware('auth')->group(function () {
         ->name('admin.program.edit');
 
     Route::put('/admin/program/{id}', [AdminProgramController::class, 'update'])
-        ->name('admin.program.update');;
+        ->name('admin.program.update');
 
-    // 5. Tagihan & Bukti Pembayaran
+    // ===== TAMBAHAN ROUTE UNTUK SIMPAN JADWAL DARI HALAMAN EDIT PROGRAM =====
+    Route::post('/admin/jadwal/simpan', [JadwalController::class, 'store'])
+        ->name('admin.jadwal.store');
+
+        // Buka halaman kelola jadwal
+    Route::get('/admin/jadwal', [JadwalController::class, 'index'])->name('admin.jadwal.index');
+    // ========================================================================
+
+// 5. Tagihan & Bukti Pembayaran
+
     Route::get('/admin/tagihan', function () {
         if (Auth::user()->role !== 'admin') return redirect('/dashboard');
         
-        $tagihans = DB::table('tagihan')
-            ->join('pendaftaran', 'tagihan.pendaftaran_id', '=', 'pendaftaran.id')
+        // Mulai dari Pendaftaran agar semua pendaftar muncul
+        $tagihans = DB::table('pendaftaran')
+            ->leftJoin('tagihan', 'pendaftaran.id', '=', 'tagihan.pendaftaran_id')
             ->join('users', 'pendaftaran.user_id', '=', 'users.id')
             ->join('program_kursus', 'pendaftaran.program_id', '=', 'program_kursus.id')
             ->select(
+                'pendaftaran.id as pendaftaran_id', 
                 'tagihan.id', 
-                'users.name as nama_siswa', 
-                'program_kursus.nama_program', 
                 'tagihan.jumlah', 
                 'tagihan.status', 
                 'tagihan.buktiTransfer',
-                'tagihan.created_at'
+                'users.name as nama_siswa', 
+                'program_kursus.nama_program', 
+                'program_kursus.biaya as total_biaya_kelas'
             )
-            ->orderBy('tagihan.created_at', 'desc')
+            ->orderBy('pendaftaran.created_at', 'desc')
             ->get();
 
+        // Hitung sisa bayar
+        foreach ($tagihans as $t) {
+            $totalMasuk = DB::table('tagihan')
+                ->where('pendaftaran_id', $t->pendaftaran_id)
+                ->where('status', 'lunas')
+                ->sum('jumlah');
+                
+            $t->sisa_bayar = ($t->total_biaya_kelas ?? 0) - $totalMasuk;
+        }
+
         return view('admin.tagihan', compact('tagihans'));
-    });
+    })->name('admin.tagihan');
 
     // 6. Proses Konfirmasi Pembayaran
     Route::post('/admin/tagihan/{id}/konfirmasi', function ($id) {
@@ -192,7 +266,7 @@ Route::middleware('auth')->group(function () {
         return back()->with('success', 'Pembayaran berhasil dikonfirmasi! Status tagihan sekarang Lunas.');
     });
 
-    // 7. Proses Tolak Bukti Pembayaran (misal buktinya palsu/gak jelas)
+    // 7. Proses Tolak Bukti Pembayaran
     Route::post('/admin/tagihan/{id}/tolak', function ($id) {
         if (Auth::user()->role !== 'admin') return redirect('/dashboard');
         

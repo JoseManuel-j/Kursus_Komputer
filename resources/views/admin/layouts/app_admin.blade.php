@@ -58,6 +58,11 @@
     <a href="/admin/program" class="{{ request()->is('admin/program') ? 'active' : '' }}">
         <i class="fa fa-book"></i> Program Kursus
     </a>
+    
+    <a href="/admin/jadwal" class="{{ request()->is('admin/jadwal') ? 'active' : '' }}">
+        <i class="fa fa-calendar-alt"></i> Jadwal Kelas
+    </a>
+    
     <a href="/admin/tagihan" class="{{ request()->is('admin/tagihan') ? 'active' : '' }}">
         <i class="fa fa-file-invoice-dollar"></i> Tagihan & Bukti
     </a>
