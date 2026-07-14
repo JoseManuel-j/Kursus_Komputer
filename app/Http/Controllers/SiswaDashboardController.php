@@ -15,7 +15,7 @@ class SiswaDashboardController extends Controller
         $siswa = Auth::user();
         
         // 2. Ambil pendaftaran, program, dan jadwal
-        $pendaftaran = Pendaftaran::with(['programKursus', 'jadwal'])
+        $pendaftaran = Pendaftaran::with(['programKursus', 'jadwal', 'tagihan'])
                         ->where('user_id', $siswa->id)
                         ->get();
 

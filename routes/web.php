@@ -342,5 +342,17 @@ Route::middleware('auth')->group(function () {
             ->get();
         
         return view('instruktur.jadwal', compact('jadwals'));
+
+        // Update Status Pembayaran Manual via Dropdown
+    Route::post('/admin/tagihan/{id}/update-status', function ($id) {
+        if (Auth::user()->role !== 'admin') return redirect('/dashboard');
+        
+        DB::table('tagihan')->where('id', $id)->update([
+            'status' => request('status'), // Status akan diubah sesuai pilihan dropdown
+            'updated_at' => now()
+        ]);
+
+        return back()->with('success', 'Status tagihan berhasil diperbarui!');
+    });
     });
 });

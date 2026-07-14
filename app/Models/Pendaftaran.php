@@ -29,4 +29,9 @@ class Pendaftaran extends Model
     {
         return $this->hasMany(JadwalKelas::class, 'pendaftaran_id');
     }
+
+    public function tagihan()
+{
+    return $this->hasOne(Tagihan::class, 'pendaftaran_id');
+}
 }

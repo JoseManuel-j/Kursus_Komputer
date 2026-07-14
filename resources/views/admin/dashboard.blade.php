@@ -82,7 +82,7 @@
                     <td colspan="3" class="text-center py-5 text-muted">
                         <i class="fa fa-folder-open fs-1 mb-3 opacity-25"></i>
                         <p class="mb-0">Belum ada data pendaftaran.</p>
-                    </td>
+                    </td>   
                 </tr>
                 @endforelse
             </tbody>
