@@ -20,19 +20,23 @@ class SiswaDashboardController extends Controller
                         ->get();
 
         // 3. LOGIKA PERHITUNGAN SISA BAYAR 
-        foreach ($pendaftaran as $item) {
-            $totalMasuk = DB::table('tagihan')
-                ->where('pendaftaran_id', $item->id)
-                ->where('status', 'lunas')
-                ->sum('jumlah');
-
-            // JAGA-JAGA: Kalau data programnya null/hilang, anggap biayanya 0
-            $biayaProgram = $item->programKursus->biaya ?? 0; 
-            
-            // Hitung sisa bayar
-            $item->sisa_bayar = $biayaProgram - $totalMasuk;
-        }
-
+// Di dalam loop foreach($pendaftaran as $item) di SiswaDashboardController.php
+foreach ($pendaftaran as $item) {
+    // Ambil semua tagihan untuk pendaftaran ini
+    $tagihans = DB::table('tagihan')->where('pendaftaran_id', $item->id)->get();
+    
+    // Total biaya kursus
+    $biaya = $item->programKursus->biaya ?? 0;
+    
+    // Hitung total yang sudah dibayar (status lunas)
+    $totalDibayar = $tagihans->where('status', 'lunas')->sum('jumlah');
+    
+    // Tentukan status dan sisa
+    $item->sisa_bayar = $biaya - $totalDibayar;
+    
+    // Ambil status dari tagihan terakhir atau tentukan sendiri
+    $item->status_bayar = $tagihans->isNotEmpty() ? $tagihans->last()->status : 'belum_ada';
+}
 
         $aktivitas = DB::table('riwayat_aktivitas')
             ->where('user_id', Auth::id())
