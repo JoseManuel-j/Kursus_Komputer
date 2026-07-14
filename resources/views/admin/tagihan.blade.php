@@ -22,7 +22,6 @@
             <tbody>
                 @forelse ($tagihans as $tagihan)
                 <tr>
-                    <!-- KOLOM BARU: No. Bukti / ID Tagihan -->
                     <td class="py-3 px-4">
                         <span class="badge bg-secondary rounded-pill px-3">
                             INV-{{ str_pad($tagihan->id, 5, '0', STR_PAD_LEFT) }}
@@ -32,7 +31,6 @@
                     <td class="py-3 px-4 fw-bold text-dark">{{ $tagihan->nama_siswa }}</td>
                     <td class="py-3 px-4 text-muted">{{ $tagihan->nama_program }}</td>
                     
-                    <!-- UBAH: Menampilkan jumlah yang dibayar pada termin ini -->
                     <td class="py-3 px-4 fw-semibold" style="color: #7c3aed;">
                         Rp {{ number_format($tagihan->jumlah, 0, ',', '.') }}
                     </td>
@@ -52,15 +50,15 @@
                     <td class="py-3 px-4 text-center">
                         <span class="badge 
                             @if($tagihan->status == 'lunas') bg-success
+                            @elseif($tagihan->status == 'cicilan') bg-warning text-dark
                             @elseif($tagihan->status == 'ditolak') bg-danger
-                            @else bg-warning text-dark
+                            @else bg-secondary
                             @endif
                             rounded-pill px-3">
                             {{ ucfirst(str_replace('_', ' ', $tagihan->status)) }}
                         </span>
                     </td>
                     
-                    <!-- KOLOM AKSI (DROPDOWN STATUS) -->
                     <td class="py-3 px-4 text-center">
                         <form action="/admin/tagihan/{{ $tagihan->id }}/update-status" method="POST" class="d-flex align-items-center justify-content-center gap-1 m-0">
                             @csrf
@@ -76,8 +74,9 @@
                             @endif
 
                             <select name="status" class="form-select form-select-sm rounded-pill" style="width: 110px; font-size: 0.8rem; cursor: pointer;">
-                                <option value="belum_lunas" {{ $tagihan->status == 'belum_lunas' || $tagihan->status == 'pending' ? 'selected' : '' }}>Pending</option>
+                                <option value="belum_lunas" {{ $tagihan->status == 'belum_lunas' ? 'selected' : '' }}>Pending</option>
                                 <option value="lunas" {{ $tagihan->status == 'lunas' ? 'selected' : '' }}>Lunas</option>
+                                <option value="cicilan" {{ $tagihan->status == 'cicilan' ? 'selected' : '' }}>Cicilan</option>
                                 <option value="ditolak" {{ $tagihan->status == 'ditolak' ? 'selected' : '' }}>Ditolak</option>
                             </select>
 
@@ -89,7 +88,6 @@
                 </tr>
                 @empty
                 <tr>
-                    <!-- Colspan diubah menjadi 7 menyesuaikan tambahan kolom No. Bukti -->
                     <td colspan="7" class="py-5 text-center text-muted">
                         <i class="fa fa-inbox fs-1 mb-3 opacity-50"></i>
                         <h5>Belum ada data pendaftaran & tagihan yang masuk.</h5>

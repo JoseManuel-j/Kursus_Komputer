@@ -50,7 +50,7 @@
                         </select>
                     </div>
 
-                    <div class="row mb-3">
+                    <div class="row mb-4">
                         <div class="col-6">
                             <label class="form-label fw-bold small">Jam Mulai</label>
                             <input type="time" name="jam_mulai" class="form-control" required>
@@ -59,11 +59,6 @@
                             <label class="form-label fw-bold small">Jam Selesai</label>
                             <input type="time" name="jam_selesai" class="form-control" required>
                         </div>
-                    </div>
-
-                    <div class="mb-4">
-                        <label class="form-label fw-bold small">Ruangan / Tempat</label>
-                        <input type="text" name="ruangan" class="form-control" placeholder="Contoh: Lab 1 / Online">
                     </div>
 
                     <button type="submit" class="btn btn-primary w-100" style="border-radius: 10px;">
@@ -84,7 +79,6 @@
                                 <th>Nama Murid</th>
                                 <th>Program</th>
                                 <th>Hari & Waktu</th>
-                                <th>Ruangan</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -98,11 +92,10 @@
                                         {{ \Carbon\Carbon::parse($jadwal->jam_mulai)->format('H:i') }} - {{ \Carbon\Carbon::parse($jadwal->jam_selesai)->format('H:i') }}
                                     </span>
                                 </td>
-                                <td>{{ $jadwal->ruangan ?? '-' }}</td>
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="4" class="text-center text-muted py-4">Belum ada jadwal yang ditambahkan.</td>
+                                <td colspan="3" class="text-center text-muted py-4">Belum ada jadwal yang ditambahkan.</td>
                             </tr>
                             @endforelse
                         </tbody>

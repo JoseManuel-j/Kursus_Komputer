@@ -15,8 +15,9 @@
 </div>
 
 @php
+    // Menghitung tagihan yang belum lunas berdasarkan status database
     $tagihanBelumLunas = $pendaftaran->filter(function($item) {
-        return $item->sisa_bayar > 0;
+        return isset($item->tagihan) && $item->tagihan->status !== 'lunas';
     })->count();
 @endphp
 
@@ -56,7 +57,7 @@
 
 @if($pendaftaran->isEmpty())
     <div class="alert alert-warning border-0 shadow-sm" style="border-radius: 15px;">
-        <i class="fa fa-info-circle me-2"></i> Kamu belum terdaftar atau belum di-ACC di program kursus manapun.
+        <i class="fa fa-info-circle me-2"></i> Kamu belum terdaftar di program kursus manapun.
     </div>
 @else
     <div class="row g-4 mb-4">
@@ -75,14 +76,27 @@
 
                     <div class="mb-4 p-3 bg-light rounded" style="border-radius: 15px !important;">
                         <h6 class="fw-bold mb-2 small text-muted">STATUS PEMBAYARAN:</h6>
-                        @if($item->sisa_bayar <= 0)
-                            <span class="badge bg-success px-3 py-2 w-100 text-start" style="font-size: 0.9rem;">
-                                <i class="fa fa-check-circle me-2"></i> Lunas Total
-                            </span>
+                        
+                        @if(isset($item->tagihan))
+                            @if($item->tagihan->status == 'lunas')
+                                <span class="badge bg-success px-3 py-2 w-100 text-start" style="font-size: 0.9rem;">
+                                    <i class="fa fa-check-circle me-2"></i> Lunas Total
+                                </span>
+                            @elseif($item->tagihan->buktiTransfer !== null && $item->tagihan->status == 'belum_lunas')
+                                <span class="badge bg-warning px-3 py-2 w-100 text-start text-dark" style="font-size: 0.9rem;">
+                                    <i class="fa fa-clock me-2"></i> Menunggu Konfirmasi Admin
+                                </span>
+                            @elseif($item->tagihan->status == 'cicilan')
+                                <span class="badge bg-danger px-3 py-2 w-100 text-start" style="font-size: 0.9rem;">
+                                    <i class="fa fa-exclamation-circle me-2"></i> Sisa Tagihan: Rp {{ number_format($item->sisa_bayar, 0, ',', '.') }}
+                                </span>
+                            @else
+                                <span class="badge bg-secondary px-3 py-2 w-100 text-start" style="font-size: 0.9rem;">
+                                    <i class="fa fa-info-circle me-2"></i> Belum Membayar
+                                </span>
+                            @endif
                         @else
-                            <span class="badge bg-danger px-3 py-2 w-100 text-start" style="font-size: 0.9rem;">
-                                <i class="fa fa-exclamation-circle me-2"></i> Sisa Tagihan: Rp {{ number_format($item->sisa_bayar, 0, ',', '.') }}
-                            </span>
+                            <span class="text-muted small">Data tagihan tidak ditemukan.</span>
                         @endif
                     </div>
 

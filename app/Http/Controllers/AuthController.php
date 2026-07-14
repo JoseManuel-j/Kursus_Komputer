@@ -9,24 +9,26 @@ use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
-    // REGISTER VIEW
+    // =========================================================================
+    // 1. REGISTRASI
+    // =========================================================================
     public function showRegister()
     {
         return view('register');
     }
 
-    // REGISTER PROCESS
     public function register(Request $request)
     {
+        // Pastikan input form di view register.blade.php memiliki nama yang sesuai
         $request->validate([
-            'name'          => 'required',
-            'email'         => 'required|email|unique:users', 
-            'tempat_lahir'  => 'required',
+            'name'          => 'required|string|max:255',
+            'email'         => 'required|string|email|max:255|unique:users', 
+            'tempat_lahir'  => 'required|string',
             'tanggal_lahir' => 'required|date',
-            'agama'         => 'required',
-            'alamat'        => 'required',
-            'nomor_hp'      => 'required|min:10|max:13', 
-            'password'      => 'required|min:8|confirmed' 
+            'agama'         => 'required|string',
+            'alamat'        => 'required|string',
+            'nomor_hp'      => 'required|string|min:10|max:13', 
+            'password'      => 'required|string|min:8|confirmed' // Pastikan ada input 'password_confirmation' di view
         ]);
 
         User::create([
@@ -36,21 +38,22 @@ class AuthController extends Controller
             'tanggal_lahir' => $request->tanggal_lahir,
             'agama'         => $request->agama,
             'alamat'        => $request->alamat,
-            'nomor_hp'      => $request->nomor_hp, // Diperbaiki: Harus 'nomor_hp'
+            'nomor_hp'      => $request->nomor_hp,
             'password'      => Hash::make($request->password),
-            'role'          => 'siswa'
+            'role'          => 'siswa' // <--- Otomatis menjadi siswa
         ]);
 
         return redirect('/login')->with('success', 'Akun berhasil dibuat! Silakan Login.');
     }
 
-    // LOGIN VIEW
+    // =========================================================================
+    // 2. LOGIN & LOGOUT
+    // =========================================================================
     public function showLogin()
     {
         return view('login');
     }
 
-    // LOGIN PROCESS
     public function login(Request $request)
     {
         $data = [
@@ -62,25 +65,20 @@ class AuthController extends Controller
             $request->session()->regenerate();
             $role = Auth::user()->role;
 
+            // Redirect berdasarkan Role
             if ($role === 'admin') {
                 return redirect('/admin/dashboard');
             } elseif ($role === 'instruktur') {
                 return redirect('/instruktur/jadwal');
             }
 
+            // Default ke dashboard siswa
             return redirect('/dashboard')->with('success', 'Selamat datang kembali, ' . Auth::user()->name . '!');
         }
 
         return back()->with('error', 'Email atau password salah.');
     }
 
-    // DASHBOARD (Siswa)
-    public function dashboard()
-    {
-        return view('dashboard');
-    }
-
-    // LOGOUT
     public function logout(Request $request)
     {
         Auth::logout();
@@ -90,15 +88,14 @@ class AuthController extends Controller
         return redirect('/login')->with('success', 'Anda telah berhasil logout.');
     }
 
-    // --- FITUR LUPA PASSWORD (TAMBAHAN) ---
-    
-    // 1. Menampilkan halaman input email saja
+    // =========================================================================
+    // 3. FITUR LUPA PASSWORD 
+    // =========================================================================
     public function showForgotPassword()
     {
         return view('forgot-password');
     }
 
-    // 2. Aksi verifikasi email (sementara dikembalikan ke halaman dengan alert)
     public function sendResetLink(Request $request)
     {
         $request->validate([
@@ -108,13 +105,15 @@ class AuthController extends Controller
         return back()->with('success', 'Email berhasil diverifikasi! Sistem pengiriman kode dikesampingkan dulu.');
     }
 
-    // UPDATE DATA SISWA OLEH ADMIN
+    // =========================================================================
+    // 4. KELOLA DATA OLEH ADMIN
+    // =========================================================================
     public function updateSiswaByAdmin(Request $request, string $id)
     {
-        // 1. Ubah validasi ke 'nullable' agar admin bisa edit sebagian data saja
+        // Validasi 'nullable' agar admin bisa edit sebagian data saja tanpa error
         $request->validate([
             'name'          => 'required|string|max:255',
-            'nomor_hp'      => 'nullable|min:10|max:13',
+            'nomor_hp'      => 'nullable|string|min:10|max:13',
             'tempat_lahir'  => 'nullable|string',
             'tanggal_lahir' => 'nullable|date',
             'agama'         => 'nullable|string',
@@ -123,8 +122,7 @@ class AuthController extends Controller
 
         $siswa = User::findOrFail($id);
         
-        // 2. Update data
-        $siswa->update([
+        $siswa->update([    
             'name'          => $request->name,
             'nomor_hp'      => $request->nomor_hp,
             'tempat_lahir'  => $request->tempat_lahir,
