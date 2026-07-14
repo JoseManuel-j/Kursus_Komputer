@@ -73,6 +73,38 @@
     @endif
 </div>
 
+<div class="sidebar">
+    <h2>LPK Phitagoras</h2>
+
+    <div class="nav-menus">
+        <a href="/dashboard" class="{{ request()->is('dashboard') ? 'active' : '' }}">
+            <i class="fa fa-home me-2"></i> Dashboard
+        </a>
+        <a href="/kelas" class="{{ request()->is('kelas') ? 'active' : '' }}">
+            <i class="fa fa-book me-2"></i> Kelas
+        </a>
+        
+        <!-- MENU ANGSURAN DITAMBAHKAN DI SINI -->
+        <a href="/angsuran" class="{{ request()->is('angsuran') ? 'active' : '' }}">
+            <i class="fa fa-money-bill-wave me-2"></i> Angsuran
+        </a>
+        
+        <a href="/profile" class="{{ request()->is('profile') ? 'active' : '' }}">
+            <i class="fa fa-user me-2"></i> Profile
+        </a>
+    </div>
+    
+    <div class="mt-auto">
+        <hr style="border-color: rgba(255,255,255,0.1); margin-bottom: 15px;">
+        <form action="/logout" method="POST" class="m-0">
+            @csrf
+            <a href="#" onclick="event.preventDefault(); this.closest('form').submit();" class="text-danger">
+                <i class="fa fa-sign-out-alt me-2"></i> Logout
+            </a>
+        </form>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     // Auto-hide toast setelah 4 detik

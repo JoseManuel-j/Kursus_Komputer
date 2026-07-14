@@ -53,6 +53,47 @@ Route::get('/profile', function () {
     return view('profile');
 })->middleware('auth')->name('profile');
 
+// ===== UBAH ROUTE ANGSURAN MENJADI SEPERTI INI =====
+Route::get('/angsuran', function () {
+    // 1. Dapatkan ID user yang sedang login
+    $userId = Auth::id();
+
+    // 2. Cari kelas yang sedang diikuti (asumsi status pendaftaran 'aktif')
+    $pendaftaran = DB::table('pendaftaran')
+        ->join('program_kursus', 'pendaftaran.program_id', '=', 'program_kursus.id')
+        ->where('pendaftaran.user_id', $userId)
+        // ->where('pendaftaran.status', 'aktif') // Uncomment jika ada kolom status pendaftaran
+        ->select('pendaftaran.*', 'program_kursus.nama_program', 'program_kursus.biaya as total_biaya')
+        ->first();
+
+    $tagihans = [];
+    $totalMasuk = 0;
+    $sisaBayar = 0;
+    $statusLunas = 'Belum Lunas';
+
+    // 3. Jika sudah terdaftar, ambil data angsurannya
+    if ($pendaftaran) {
+        $tagihans = DB::table('tagihan')
+            ->where('pendaftaran_id', $pendaftaran->id)
+            ->orderBy('id', 'asc') // Urutkan dari angsuran pertama
+            ->get();
+
+        // Hitung berapa yang sudah lunas
+        $totalMasuk = DB::table('tagihan')
+            ->where('pendaftaran_id', $pendaftaran->id)
+            ->where('status', 'lunas')
+            ->sum('jumlah');
+
+        $sisaBayar = $pendaftaran->total_biaya - $totalMasuk;
+        if ($sisaBayar <= 0) {
+            $statusLunas = 'Lunas';
+        }
+    }
+
+    return view('angsuran', compact('pendaftaran', 'tagihans', 'totalMasuk', 'sisaBayar', 'statusLunas'));
+})->middleware('auth')->name('angsuran');
+// =================================================
+
 /*
 |--------------------------------------------------------------------------
 | KELAS & PENDAFTARAN (SISWA)
@@ -100,11 +141,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/pendaftaran', [PendaftaranController::class, 'store']);
 });
 
-/*
-|--------------------------------------------------------------------------
-| AREA KHUSUS ADMIN
-|--------------------------------------------------------------------------
-*/
+/* AREA KHUSUS ADMIN */
 
 Route::middleware('auth')->group(function () {
     
@@ -184,13 +221,21 @@ Route::middleware('auth')->group(function () {
         $pendaftaran = DB::table('pendaftaran')
             ->leftJoin('program_kursus', 'pendaftaran.program_id', '=', 'program_kursus.id')
             ->where('pendaftaran.user_id', $id)
-            ->select('pendaftaran.*', 'program_kursus.nama_program')
+            ->select('pendaftaran.*', 'program_kursus.nama_program', 'program_kursus.biaya as total_biaya')
             ->orderBy('pendaftaran.created_at', 'desc')
             ->first();
 
-        return view('admin.siswa_detail', compact('siswa', 'pendaftaran'));
-    });
+        // Tarik data angsuran khusus untuk pendaftaran siswa ini
+        $tagihans = [];
+        if ($pendaftaran) {
+            $tagihans = DB::table('tagihan')
+                ->where('pendaftaran_id', $pendaftaran->id)
+                ->orderBy('id', 'asc') // Urutkan dari angsuran pertama ke terakhir
+                ->get();
+        }
 
+        return view('admin.siswa_detail', compact('siswa', 'pendaftaran', 'tagihans'));
+    });
     // PROSES UPDATE DATA SISWA OLEH ADMIN
     Route::put('/admin/siswa/{id}/update', [AuthController::class, 'updateSiswaByAdmin']);
 
@@ -210,7 +255,7 @@ Route::middleware('auth')->group(function () {
     Route::put('/admin/program/{id}', [AdminProgramController::class, 'update'])
         ->name('admin.program.update');
 
-    // ===== TAMBAHAN ROUTE UNTUK SIMPAN JADWAL DARI HALAMAN EDIT PROGRAM =====
+    //  TAMBAHAN ROUTE UNTUK SIMPAN JADWAL DARI HALAMAN EDIT PROGRAM =====
     Route::post('/admin/jadwal/simpan', [JadwalController::class, 'store'])
         ->name('admin.jadwal.store');
 
@@ -279,11 +324,7 @@ Route::middleware('auth')->group(function () {
     });
 });
 
-/*
-|--------------------------------------------------------------------------
-| AREA KHUSUS INSTRUKTUR
-|--------------------------------------------------------------------------
-*/
+/* AREA KHUSUS INSTRUKTUR */
 Route::middleware('auth')->group(function () {
     Route::get('/instruktur/jadwal', function () {
         if (Auth::user()->role !== 'instruktur') {

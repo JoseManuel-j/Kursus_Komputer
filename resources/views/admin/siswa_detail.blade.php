@@ -35,6 +35,7 @@
 
                     <div style="margin-top: 60px;"></div>
 
+                    <!-- BAGIAN INFORMASI PRIBADI -->
                     <div class="d-flex justify-content-between align-items-center mb-4 mt-3">
                         <h5 class="fw-bold mb-0" style="color: #4f46e5;"><i class="fa fa-id-card me-2"></i>Informasi Pribadi</h5>
                         <button type="button" class="btn btn-sm btn-outline-primary fw-bold rounded-pill px-3 shadow-sm" data-bs-toggle="modal" data-bs-target="#modalEditSiswa">
@@ -85,6 +86,7 @@
 
                     <hr class="my-4 text-muted opacity-25">
 
+                    <!-- BAGIAN STATUS PENDAFTARAN -->
                     <h5 class="fw-bold mb-4" style="color: #4f46e5;"><i class="fa fa-graduation-cap me-2"></i>Status Pendaftaran & Dokumen</h5>
                     
                     @if($pendaftaran)
@@ -131,6 +133,62 @@
                         </div>
                     @endif
 
+                    <hr class="my-5 text-muted opacity-25">
+
+                    <!-- BAGIAN RIWAYAT ANGSURAN (TAMBAHAN BARU) -->
+                    <h5 class="fw-bold mb-4" style="color: #4f46e5;"><i class="fa fa-money-bill-wave me-2"></i>Riwayat Angsuran & Tagihan</h5>
+                    
+                    @if($pendaftaran)
+                        <div class="table-responsive border rounded-3 shadow-sm">
+                            <table class="table table-hover align-middle mb-0 text-center">
+                                <thead class="bg-light">
+                                    <tr>
+                                        <th class="py-3">Angs. Ke</th>
+                                        <th class="py-3">Nominal Tagihan</th>
+                                        <th class="py-3">No. Bukti</th>
+                                        <th class="py-3">Status</th>
+                                        <th class="py-3">Tanggal Bayar</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse($tagihans ?? [] as $index => $t)
+                                    <tr>
+                                        <td class="fw-medium">{{ $index + 1 }}</td>
+                                        <td class="fw-bold" style="color: #7c3aed;">Rp {{ number_format($t->jumlah, 0, ',', '.') }}</td>
+                                        <td>
+                                            <span class="badge bg-secondary rounded-pill px-3">INV-{{ str_pad($t->id, 5, '0', STR_PAD_LEFT) }}</span>
+                                        </td>
+                                        <td>
+                                            @if($t->status == 'lunas')
+                                                <span class="badge bg-success rounded-pill px-3">Lunas</span>
+                                            @elseif($t->status == 'ditolak')
+                                                <span class="badge bg-danger rounded-pill px-3">Ditolak</span>
+                                            @else
+                                                <span class="badge bg-warning text-dark rounded-pill px-3">Pending</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            @if($t->status == 'lunas')
+                                                <span class="text-success fw-medium">{{ isset($t->updated_at) ? \Carbon\Carbon::parse($t->updated_at)->format('d M Y') : '-' }}</span>
+                                            @else
+                                                <span class="text-muted">-</span>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                    @empty
+                                    <tr>
+                                        <td colspan="5" class="py-4 text-muted">Siswa ini belum memiliki data tagihan angsuran.</td>
+                                    </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    @else
+                        <div class="alert alert-secondary border-0 shadow-sm rounded-3">
+                            <i class="fa fa-info-circle me-2"></i> Tidak ada tagihan karena siswa belum mendaftar program apapun.
+                        </div>
+                    @endif
+
                 </div>
             </div>
             
@@ -138,6 +196,7 @@
     </div>
 </div>
 
+<!-- MODAL EDIT SISWA -->
 <div class="modal fade" id="modalEditSiswa" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content" style="border-radius: 15px; border: none;">

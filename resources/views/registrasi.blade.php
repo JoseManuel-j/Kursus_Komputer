@@ -159,8 +159,16 @@
                 <a href="/kelas" class="btn btn-outline-secondary btn-lg w-25 fw-bold">Batal</a>
                 <button type="submit" class="btn btn-primary btn-lg w-75 fw-bold shadow-sm">Daftar & Konfirmasi Pembayaran</button>
             </div>
-        </form>
 
+            <!-- KOTAK INFORMASI ANGSURAN -->
+            <div class="alert border-0 shadow-sm d-flex align-items-center mb-4" style="border-radius: 15px; background-color: #eef2ff; color: #4338ca;">
+                <i class="fa fa-info-circle fa-2x me-3"></i>
+                <div>
+                    <strong class="fw-bold text-uppercase" style="font-size: 0.85rem; letter-spacing: 0.5px;">Informasi Pembayaran</strong><br>
+                    <span class="fs-6">Biaya program kursus ini dapat dibayar secara penuh atau diangsur <strong>maksimal 3 kali pembayaran (3 termin)</strong>.</span>
+                </div>
+            </div>
+        </form>
     </div>
 </div>
 
