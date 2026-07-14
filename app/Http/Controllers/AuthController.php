@@ -109,7 +109,7 @@ class AuthController extends Controller
     }
 
     // UPDATE DATA SISWA OLEH ADMIN
-    public function updateSiswaByAdmin(Request $request, $id)
+    public function updateSiswaByAdmin(Request $request, string $id)
     {
         // 1. Ubah validasi ke 'nullable' agar admin bisa edit sebagian data saja
         $request->validate([

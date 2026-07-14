@@ -106,24 +106,17 @@ Route::middleware('auth')->group(function () {
         $search = $request->input('search');
         $kategori = $request->input('kategori');
 
-        // Cek status pendaftaran
+        // 1. Cek status pendaftaran siswa
         $kelasAktif = DB::table('pendaftaran')
             ->where('user_id', $userId)
             ->where('status', 'aktif')
             ->first();
 
-        // Query program
-        $query = DB::table('program_kursus');
+        $registeredProgramId = $kelasAktif ? $kelasAktif->program_id : null;
 
-        if ($kelasAktif) {
-            $query->where('id', $kelasAktif->program_id);
-            $isRegistered = true; 
-        } else {
-            $isRegistered = false;
-        }
-
-        // Terapkan Filter
-        $programs = $query->when($search, function ($q) use ($search) {
+        // 2. Tarik SEMUA program dari database dengan fitur pencarian
+        $semuaProgram = DB::table('program_kursus')
+            ->when($search, function ($q) use ($search) {
                 return $q->where('nama_program', 'like', "%{$search}%");
             })
             ->when($kategori, function ($q) use ($kategori) {
@@ -131,7 +124,18 @@ Route::middleware('auth')->group(function () {
             })
             ->get();
 
-        return view('kelas', compact('programs', 'isRegistered')); 
+        // 3. Pisahkan data menjadi 2 kelompok (Yang sudah didaftar vs Belum didaftar)
+        $programTerdaftar = null;
+        $programLainnya = collect(); 
+
+        if ($registeredProgramId) {
+            $programTerdaftar = $semuaProgram->firstWhere('id', $registeredProgramId);
+            $programLainnya = $semuaProgram->where('id', '!=', $registeredProgramId);
+        } else {
+            $programLainnya = $semuaProgram;
+        }
+
+        return view('kelas', compact('programTerdaftar', 'programLainnya', 'kelasAktif')); 
     })->name('kelas');
 
     // Nampilin form konfirmasi pendaftaran
