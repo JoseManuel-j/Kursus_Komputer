@@ -12,6 +12,9 @@
         .section-title { font-weight: 600; font-size: 18px; margin-bottom: 15px; border-bottom: 2px solid #f0f0f0; padding-bottom: 8px; margin-top: 20px; }
         .form-label { font-weight: 500; font-size: 14px; color: #444; }
         .summary-box { background: #eef2ff; border: 1px dashed #4f46e5; border-radius: 12px; padding: 15px; }
+        /* Menghilangkan panah spinner pada input number */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
     </style>
 </head>
 <body>
@@ -113,6 +116,44 @@
             </div>
 
             <!-- REVISI: MENAMBAHKAN RINCIAN RINGKASAN BIAYA (HARGA KELAS + PENDAFTARAN) -->
+            <div class="section-title">C. Opsi Pembayaran</div>
+
+            <div class="mb-4">
+                <label class="form-label fw-bold">Pilih Metode Pembayaran</label>
+                <select name="tipe_pembayaran" id="tipe_pembayaran" class="form-select" onchange="toggleCicilan()" required>
+                    <option value="lunas">Bayar Lunas</option>
+                    <option value="angsuran">Cicilan (Maksimal 3x)</option>
+                </select>
+            </div>
+
+            <!-- Form 3 Input Cicilan -->
+            <div id="form_cicilan" class="mb-4 p-3 border rounded" style="display:none; background-color: #f8f9fa;">
+                <label class="form-label fw-bold">Masukkan Nominal Cicilan (Tiap Termin):</label>
+                <div class="row">
+                    @for($i=1; $i<=3; $i++)
+                        <div class="col-md-4 mb-2">
+                            <input type="text" name="cicilan[]" class="form-control" placeholder="Angsuran {{ $i }} (Contoh: 1.000.000)" onkeyup="formatRupiah(this)">
+                        </div>
+                    @endfor
+                </div>
+                <small class="text-muted">*Masukkan angka tanpa titik, sistem akan memformat otomatis.</small>
+            </div>
+
+            <!-- SCRIPT PENGATURAN -->
+            <script>
+                function toggleCicilan() {
+                    let tipe = document.getElementById('tipe_pembayaran').value;
+                    document.getElementById('form_cicilan').style.display = (tipe == 'angsuran') ? 'block' : 'none';
+                }
+
+                // Fungsi format rupiah 1.000.000
+                function formatRupiah(input) {
+                    let angka = input.value.replace(/\D/g, ''); // Hapus semua selain angka
+                    input.value = angka.replace(/\B(?=(\d{3})+(?!\d))/g, "."); // Tambahkan titik
+                }
+            </script>
+
+            <!--C. Rincian & Metode Pembayaran Anda yang lama -->
             <div class="section-title">C. Rincian & Metode Pembayaran</div>
 
             <div class="payment-box">

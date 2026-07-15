@@ -15,9 +15,11 @@
 </div>
 
 @php
-    // Menghitung tagihan yang belum lunas berdasarkan status database
+    // FIX: hitung kelas belum lunas dari $item->status_bayar (sudah dihitung
+    // benar di controller dari SEMUA tagihan), bukan dari relasi tagihan
+    // tunggal yang ambigu seperti sebelumnya.
     $tagihanBelumLunas = $pendaftaran->filter(function($item) {
-        return isset($item->tagihan) && $item->tagihan->status !== 'lunas';
+        return $item->status_bayar !== 'lunas';
     })->count();
 @endphp
 
@@ -76,28 +78,29 @@
 
 <div class="mb-4 p-3 bg-light rounded" style="border-radius: 15px !important;">
     <h6 class="fw-bold mb-2 small text-muted">STATUS PEMBAYARAN:</h6>
-    
-    @if(isset($item->tagihan))
-        {{-- Logika baru untuk cicilan --}}
-        @if($item->tagihan->status == 'lunas')
-            <span class="badge bg-success px-3 py-2 w-100 text-start">
-                <i class="fa fa-check-circle me-2"></i> Lunas Total
-            </span>
-        @elseif($item->tagihan->status == 'cicilan')
-            <span class="badge bg-warning px-3 py-2 w-100 text-start text-dark">
-                <i class="fa fa-exclamation-circle me-2"></i> Sisa Tagihan: Rp {{ number_format($item->sisa_bayar, 0, ',', '.') }}
-            </span>
-        @elseif($item->tagihan->status == 'pending')
-            <span class="badge bg-info px-3 py-2 w-100 text-start text-white">
-                <i class="fa fa-clock me-2"></i> Menunggu Konfirmasi
-            </span>
-        @else
-            <span class="badge bg-secondary px-3 py-2 w-100 text-start">
-                <i class="fa fa-info-circle me-2"></i> {{ ucfirst($item->tagihan->status) }}
-            </span>
-        @endif
-    @else
+
+    {{-- FIX: badge sekarang berdasarkan $item->status_bayar (dihitung dari
+         SELURUH tagihan pendaftaran ini di controller), bukan dari
+         $item->tagihan->status yang sebelumnya cuma mengambil satu baris
+         tagihan secara ambigu dan bisa tidak sinkron dengan sisa_bayar. --}}
+    @if($item->status_bayar == 'lunas')
+        <span class="badge bg-success px-3 py-2 w-100 text-start">
+            <i class="fa fa-check-circle me-2"></i> Lunas Total
+        </span>
+    @elseif($item->status_bayar == 'cicilan')
+        <span class="badge bg-warning px-3 py-2 w-100 text-start text-dark">
+            <i class="fa fa-exclamation-circle me-2"></i> Sisa Tagihan: Rp {{ number_format($item->sisa_bayar, 0, ',', '.') }}
+        </span>
+    @elseif($item->status_bayar == 'pending')
+        <span class="badge bg-info px-3 py-2 w-100 text-start text-white">
+            <i class="fa fa-clock me-2"></i> Menunggu Konfirmasi
+        </span>
+    @elseif($item->status_bayar == 'belum_ada')
         <span class="text-muted small">Data tagihan tidak ditemukan.</span>
+    @else
+        <span class="badge bg-secondary px-3 py-2 w-100 text-start">
+            <i class="fa fa-info-circle me-2"></i> {{ ucfirst($item->status_bayar) }}
+        </span>
     @endif
 </div>
 

@@ -135,7 +135,7 @@
 
                     <hr class="my-5 text-muted opacity-25">
 
-                    <!-- BAGIAN RIWAYAT ANGSURAN (TAMBAHAN BARU) -->
+                    <!-- BAGIAN RIWAYAT ANGSURAN (DIPERBAIKI) -->
                     <h5 class="fw-bold mb-4" style="color: #4f46e5;"><i class="fa fa-money-bill-wave me-2"></i>Riwayat Angsuran & Tagihan</h5>
                     
                     @if($pendaftaran)
@@ -147,7 +147,7 @@
                                         <th class="py-3">Nominal Tagihan</th>
                                         <th class="py-3">No. Bukti</th>
                                         <th class="py-3">Status</th>
-                                        <th class="py-3">Tanggal Bayar</th>
+                                        <th class="py-3">Tanggal Pembayaran</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -159,22 +159,33 @@
                                             <span class="badge bg-secondary rounded-pill px-3">INV-{{ str_pad($t->id, 5, '0', STR_PAD_LEFT) }}</span>
                                         </td>
                                         <td>
+                                            {{-- FIX: sebelumnya status 'cicilan' tidak punya cabang sendiri
+                                                 sehingga otomatis jatuh ke 'else' dan tampil sebagai "Pending"
+                                                 walaupun statusnya sebenarnya sudah Cicilan. --}}
                                             @if($t->status == 'lunas')
                                                 <span class="badge bg-success rounded-pill px-3">Lunas</span>
+                                            @elseif($t->status == 'cicilan')
+                                                <span class="badge bg-warning text-dark rounded-pill px-3">Cicilan</span>
                                             @elseif($t->status == 'ditolak')
                                                 <span class="badge bg-danger rounded-pill px-3">Ditolak</span>
                                             @else
-                                                <span class="badge bg-warning text-dark rounded-pill px-3">Pending</span>
+                                                <span class="badge bg-secondary rounded-pill px-3">Pending</span>
                                             @endif
                                         </td>
                                         <td>
+                                            {{-- LOGIKA: Membedakan status dan memberikan info nominal --}}
                                             @if($t->status == 'lunas')
-                                                <span class="text-success fw-medium">{{ isset($t->updated_at) ? \Carbon\Carbon::parse($t->updated_at)->format('d M Y') : '-' }}</span>
+                                                <span class="badge bg-success rounded-pill px-3">Lunas</span>
+                                            @elseif($t->status == 'cicilan')
+                                                <span class="badge bg-warning text-dark rounded-pill px-3">
+                                                    -
+                                                </span>
                                             @else
-                                                <span class="text-muted">-</span>
+                                                {{-- Ini untuk tagihan yang statusnya 'pending' atau belum dibayar sama sekali --}}
+                                                <span class="badge bg-secondary rounded-pill px-3">Belum Dibayar</span>
                                             @endif
                                         </td>
-                                    </tr>
+                                    </tr>   
                                     @empty
                                     <tr>
                                         <td colspan="5" class="py-4 text-muted">Siswa ini belum memiliki data tagihan angsuran.</td>
