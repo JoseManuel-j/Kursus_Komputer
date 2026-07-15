@@ -45,7 +45,7 @@ class JadwalController extends Controller
             'hari' => $request->hari,
             'jam_mulai' => $request->jam_mulai,
             'jam_selesai' => $request->jam_selesai,
-            'ruangan' => $request->ruangan,
+            'ruangan' => $request->ruangan ?? '-',
             'created_at' => now(),
             'updated_at' => now(),
         ]);
