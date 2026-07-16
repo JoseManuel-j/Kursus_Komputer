@@ -106,14 +106,6 @@
         
         <div class="custom-card-body">
             
-            <!-- ALERT JIKA REGISTRASI SUKSES -->
-            @if(session('success'))
-                <div class="alert alert-success d-flex align-items-center" style="border-radius: 10px;">
-                    <i class="fa fa-check-circle fa-lg me-2"></i>
-                    <div>{{ session('success') }}</div>
-                </div>
-            @endif
-
             <!-- PANTAUAN ERROR VALIDASI -->
             @if($errors->any())
                 <div class="alert alert-danger" style="border-radius: 10px;">
