@@ -30,6 +30,31 @@ public function store(Request $request)
         'bukti_bayar' => 'required|file|mimes:jpeg,png,jpg,pdf|max:2048'
     ]);
 
+    // >>> TAMBAHKAN BLOK INI <
+    $program = DB::table('program_kursus')->where('id', $request->program_id)->first();
+    $biayaPendaftaran = 100000;
+    $totalTagihan = $program->biaya + $biayaPendaftaran;
+
+    if ($request->tipe_pembayaran == 'angsuran') {
+        if (!$request->filled('cicilan') || count(array_filter($request->cicilan)) === 0) {
+            return back()->withErrors(['cicilan' => 'Nominal cicilan wajib diisi.'])->withInput();
+        }
+
+        $totalCicilan = 0;
+        foreach ($request->cicilan as $nominal) {
+            $angkaMurni = (int) str_replace('.', '', $nominal);
+            $totalCicilan += $angkaMurni;
+        }
+
+        if ($totalCicilan !== $totalTagihan) {
+            return back()->withErrors([
+                'cicilan' => 'Total cicilan (Rp ' . number_format($totalCicilan, 0, ',', '.') .
+                             ') harus sama persis dengan total tagihan (Rp ' .
+                             number_format($totalTagihan, 0, ',', '.') . '). Tidak boleh kurang atau lebih.'
+            ])->withInput();
+        }
+    }
+
     // 2. Upload Dokumen Siswa
     $folderDokumen = public_path('uploads/dokumen_siswa');
     $namaKtp = time() . '_ktp_' . $request->file('file_ktp')->getClientOriginalName();

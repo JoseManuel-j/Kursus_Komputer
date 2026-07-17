@@ -104,7 +104,7 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label small text-muted">Nominal (Rp)</label>
-                        <input type="number" name="jumlah" class="form-control" min="1" required placeholder="Contoh: 500000">
+                        <input type="number" name="jumlah" id="input_nominal" class="form-control" min="1" required placeholder="Contoh: 500000">
                     </div>
                     <div class="mb-3">
                         <label class="form-label small text-muted">Status</label>
@@ -195,85 +195,97 @@
                             <th class="py-2 px-4 text-center" style="width: 140px;">Aksi</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        @foreach ($programItems as $tagihan)
-                        @php    
-                            $status = $tagihan->status ?? 'pending';
+<tbody>
+    @foreach ($programItems as $tagihan)
+        @php    
+            $status = $tagihan->status ?? 'pending';
+            $hasBukti = !empty($tagihan->buktiTransfer);
 
-                            $badgeClass = match($status) {
-                                'lunas'   => 'bg-success-subtle text-success',
-                                'cicilan' => 'bg-warning-subtle text-warning-emphasis',
-                                default   => 'bg-danger-subtle text-danger',
-                            };
-                        @endphp
-                        <tr data-status="{{ $status }}"
-                            data-search="{{ strtolower($namaSiswa . ' ' . ($tagihan->id ? 'inv-' . str_pad($tagihan->id, 5, '0', STR_PAD_LEFT) : '')) }}"
-                            class="{{ $status === 'pending' ? 'table-danger bg-opacity-10' : '' }}">
+            // LOGIKA STATUS CERDAS
+            if ($status === 'pending') {
+                // Jika sudah diupload buktinya oleh siswa, tampilkan Verifikasi Admin
+                $teksStatus = $hasBukti ? 'Verifikasi Admin' : 'Belum Bayar';
+                $badgeClass = $hasBukti ? 'bg-info-subtle text-info-emphasis' : 'bg-secondary-subtle text-secondary';
+            } elseif ($status === 'cicilan') {
+                $teksStatus = 'Cicilan';
+                $badgeClass = 'bg-warning-subtle text-warning-emphasis';
+            } elseif ($status === 'lunas') {
+                $teksStatus = 'Lunas';
+                $badgeClass = 'bg-success-subtle text-success';
+            } else {
+                $teksStatus = ucfirst($status);
+                $badgeClass = 'bg-danger-subtle text-danger';
+            }
+        @endphp
 
-                            <td class="py-3 px-4">
-                                @if ($tagihan->id)
-                                    <span class="badge bg-light text-dark border px-2 rounded-pill font-monospace" style="font-weight: 500;">
-                                        INV-{{ str_pad($tagihan->id, 5, '0', STR_PAD_LEFT) }}
-                                    </span>
-                                @else
-                                    <span class="text-muted small">Belum ada bukti</span>
-                                @endif
-                            </td>
+        <tr data-status="{{ $status }}"
+            data-search="{{ strtolower($namaSiswa . ' ' . ($tagihan->id ? 'inv-' . str_pad($tagihan->id, 5, '0', STR_PAD_LEFT) : '')) }}"
+            class="{{ $status === 'pending' ? 'table-light' : '' }}">
 
-                            <td class="py-3 px-4 text-dark">
-                                {{ $tagihan->jumlah > 0 ? 'Rp ' . number_format($tagihan->jumlah, 0, ',', '.') : '—' }}
-                            </td>
+            <td class="py-3 px-4">
+                @if ($tagihan->id)
+                    <span class="badge bg-light text-dark border px-2 rounded-pill font-monospace">
+                        INV-{{ str_pad($tagihan->id, 5, '0', STR_PAD_LEFT) }}
+                    </span>
+                @else
+                    <span class="text-muted small">Belum ada bukti</span>
+                @endif
+            </td>
 
-                            <td class="py-3 px-4 text-center">
-                                <span class="badge {{ $badgeClass }} rounded-pill px-3">
-                                    {{ ucfirst($status) }}
-                                </span>
-                            </td>
+            <td class="py-3 px-4 text-dark fw-medium">
+                {{ $tagihan->jumlah > 0 ? 'Rp ' . number_format($tagihan->jumlah, 0, ',', '.') : '—' }}
+            </td>
 
-                            {{-- KOLOM BARU: Tanggal Bayar. Tampil untuk status 'lunas' dan
-                                 'cicilan' (keduanya berarti uang sudah masuk), pakai
-                                 tagihan_updated_at sebagai waktu terakhir status ini diubah.
-                                 Pending/ditolak tampil '-' karena belum ada uang masuk. --}}
-                            <td class="py-3 px-4">
-                                @if (in_array($status, ['lunas', 'cicilan']) && !empty($tagihan->tagihan_updated_at))
-                                    <span class="text-success small fw-medium">
-                                        {{ \Carbon\Carbon::parse($tagihan->tagihan_updated_at)->format('d M Y') }}
-                                    </span>
-                                @else
-                                    <span class="text-muted small">-</span>
-                                @endif
-                            </td>
+            <td class="py-3 px-4 text-center">
+                <span class="badge {{ $badgeClass }} rounded-pill px-3">
+                    {{ $teksStatus }}
+                </span>
+            </td>
 
-                            <td class="py-3 px-4 text-center">
-                                @if ($tagihan->id)
-                                <form action="/admin/tagihan/{{ $tagihan->id }}/update-status" method="POST"
-                                      class="d-flex align-items-center justify-content-center gap-1">
-                                    @csrf
-                                    @if(!empty($tagihan->buktiTransfer))
-                                        <a href="{{ asset('uploads/bukti_pembayaran/' . $tagihan->buktiTransfer) }}"
-                                           target="_blank" class="btn btn-sm btn-outline-secondary rounded-circle"
-                                           title="Lihat bukti transfer">
-                                            <i class="fa fa-image"></i>
-                                        </a>
-                                    @endif
+            <td class="py-3 px-4">
+                @if (in_array($status, ['lunas', 'cicilan']) && !empty($tagihan->tagihan_updated_at))
+                    <span class="text-success small fw-medium">
+                        {{ \Carbon\Carbon::parse($tagihan->tagihan_updated_at)->format('d M Y') }}
+                    </span>
+                @else
+                    <span class="text-muted small">-</span>
+                @endif
+            </td>
 
-                                    <select name="status" class="form-select form-select-sm rounded-pill" style="width: 100px;">
-                                        <option value="pending" {{ $status == 'pending' ? 'selected' : '' }}>Pending</option>
-                                        <option value="cicilan" {{ $status == 'cicilan' ? 'selected' : '' }}>Cicilan</option>
-                                        <option value="lunas" {{ $status == 'lunas' ? 'selected' : '' }}>Lunas</option>
-                                    </select>
+            <td class="py-3 px-4 text-center">
+                @if ($tagihan->id)
+                <form action="/admin/tagihan/{{ $tagihan->id }}/update-status" method="POST"
+                      class="d-flex align-items-center justify-content-center gap-1">
+                    @csrf
+                    
+                    <!-- HANYA TAMPILKAN TOMBOL FOTO JIKA ADA BUKTI -->
+                    @if($hasBukti)
+                        <a href="{{ asset('uploads/bukti_pembayaran/' . $tagihan->buktiTransfer) }}"
+                           target="_blank" class="btn btn-sm btn-outline-primary rounded-circle"
+                           title="Lihat bukti transfer">
+                            <i class="fa fa-image"></i>
+                        </a>
+                    @else
+                        <span class="text-muted small fst-italic me-2" style="font-size: 11px;">(No Photo)</span>
+                    @endif
 
-                                    <button type="submit" class="btn btn-sm btn-primary rounded-circle" title="Simpan">
-                                        <i class="fa fa-save"></i>
-                                    </button>
-                                </form>
-                                @else
-                                    <span class="text-muted small">Menunggu siswa bayar</span>
-                                @endif
-                            </td>
-                        </tr>
-                        @endforeach
-                    </tbody>
+                    <select name="status" class="form-select form-select-sm rounded-pill" style="width: 100px;">
+                        <option value="pending" {{ $status == 'pending' ? 'selected' : '' }}>Pending</option>
+                        <option value="cicilan" {{ $status == 'cicilan' ? 'selected' : '' }}>Cicilan</option>
+                        <option value="lunas" {{ $status == 'lunas' ? 'selected' : '' }}>Lunas</option>
+                    </select>
+
+                    <button type="submit" class="btn btn-sm btn-primary rounded-circle" title="Simpan">
+                        <i class="fa fa-save"></i>
+                    </button>
+                </form>
+                @else
+                    <span class="text-muted small">Menunggu siswa</span>
+                @endif
+            </td>
+        </tr>
+    @endforeach
+</tbody>
                 </table>
             </div>
 

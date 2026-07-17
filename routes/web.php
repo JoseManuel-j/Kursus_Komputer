@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PendaftaranController;
 use App\Http\Controllers\AdminProgramController;
+use App\Http\Controllers\TagihanController;
 
 // ===== TAMBAHAN CONTROLLER BARU UNTUK FITUR JADWAL =====
 use App\Http\Controllers\JadwalController;
@@ -83,6 +84,8 @@ Route::get('/angsuran', function () {
 
         $sisaBayar = ($p->total_biaya ?? 0) - $totalMasuk;
         $statusLunas = $sisaBayar <= 0 ? 'Lunas' : 'Belum Lunas';
+        $nextTagihan = $tagihans->firstWhere('status', 'cicilan');
+
 
         return (object) [
             'pendaftaran'  => $p,
@@ -90,11 +93,56 @@ Route::get('/angsuran', function () {
             'totalMasuk'   => $totalMasuk,
             'sisaBayar'    => max(0, $sisaBayar),
             'statusLunas'  => $statusLunas,
+            'nextTagihan'  => $nextTagihan,
         ];
     });
 
     return view('angsuran', compact('kelasList'));
 })->middleware('auth')->name('angsuran');
+
+// --- Rute untuk Siswa Upload Bukti Bayar ---
+Route::post('/angsuran/bayar', function (Request $request) {
+    // 1. Validasi input
+    $request->validate([
+        'pendaftaran_id' => 'required|exists:pendaftaran,id',
+        'jumlah'         => 'required|numeric|min:1',
+        'bukti_bayar'    => 'required|image|mimes:jpeg,png,jpg|max:2048',
+    ]); 
+
+      return DB::transaction(function () use ($request) {
+        // Ambil baris cicilan PALING AWAL yang belum dibayar, kunci baris ini
+        // supaya aman dari double-klik / race condition
+        $tagihan = DB::table('tagihan')
+            ->where('pendaftaran_id', $request->pendaftaran_id)
+            ->where('status', 'cicilan')
+            ->orderBy('id', 'asc')
+            ->lockForUpdate()
+            ->first();
+
+        if (!$tagihan) {
+            return back()->with('error', 'Tidak ada angsuran yang perlu dibayar. Mungkin sudah lunas semua atau sedang diverifikasi admin.');
+        }
+
+    // 2. Proses upload file
+    $file = $request->file('bukti_bayar');
+    $namaFile = time() . '_' . $file->getClientOriginalName();
+    $file->move(public_path('uploads/bukti_pembayaran'), $namaFile);
+
+    // 3. Simpan ke database dengan status 'pending'
+    DB::table('tagihan')->insert([
+        'pendaftaran_id' => $request->pendaftaran_id,
+        'jumlah'         => $request->jumlah,
+        'status'         => 'pending',
+        'buktiTransfer'  => $namaFile,
+        'tanggal_bayar'  => now(),
+        'jatuh_tempo'    => now(),
+        'created_at'     => now(),
+        'updated_at'     => now(),
+    ]);
+
+    return back()->with('success', 'Bukti pembayaran berhasil dikirim! Menunggu konfirmasi Admin.');
+      });
+})->middleware('auth')->name('siswa.angsuran.bayar');
 // ============================================================================
 
 /*
@@ -195,52 +243,48 @@ Route::middleware('auth')->group(function () {
     })->name('admin.dashboard');
 
     // Update Status Pembayaran Manual via Dropdown (dengan validasi sisa bayar)
-    Route::post('/admin/tagihan/{id}/update-status', function ($id) {
-        if (Auth::user()->role !== 'admin') return redirect('/dashboard');
+Route::post('/admin/tagihan/simpan', function (Request $request) {
+    if (Auth::user()->role !== 'admin') return redirect('/dashboard');
 
-        $newStatus = request('status');
-        $tagihan = DB::table('tagihan')->where('id', $id)->first();
+    $validated = $request->validate([
+        'pendaftaran_id' => 'required|exists:pendaftaran,id',
+        'jumlah'         => 'required|numeric|min:1',
+        'status'         => 'required|in:pending,cicilan,lunas',
+    ]);
 
-        if (!$tagihan) {
-            return back()->with('error', 'Tagihan tidak ditemukan.');
-        }
+    // Ambil total biaya program
+    $pendaftaran = DB::table('pendaftaran')
+        ->join('program_kursus', 'pendaftaran.program_id', '=', 'program_kursus.id')
+        ->where('pendaftaran.id', $validated['pendaftaran_id'])
+        ->select('program_kursus.biaya as total_biaya')
+        ->first();
 
-        // Kalau status baru dianggap "uang masuk" (cicilan/lunas), cek jangan sampai
-        // total uang masuk untuk pendaftaran ini melebihi total biaya programnya
-        if (in_array($newStatus, ['cicilan', 'lunas'])) {
-            $pendaftaran = DB::table('pendaftaran')
-                ->join('program_kursus', 'pendaftaran.program_id', '=', 'program_kursus.id')
-                ->where('pendaftaran.id', $tagihan->pendaftaran_id)
-                ->select('program_kursus.biaya as total_biaya')
-                ->first();
+    $totalBiaya = $pendaftaran->total_biaya ?? 0;
 
-            $totalBiaya = $pendaftaran->total_biaya ?? 0;
+    // Hitung uang masuk (Lunas)
+    $totalMasuk = DB::table('tagihan')
+        ->where('pendaftaran_id', $validated['pendaftaran_id'])
+        ->where('status', 'lunas')
+        ->sum('jumlah');
 
-            // Uang masuk dari tagihan LAIN (di luar baris yang sedang diubah)
-            $totalMasukLain = DB::table('tagihan')
-                ->where('pendaftaran_id', $tagihan->pendaftaran_id)
-                ->where('id', '!=', $id)
-                ->where('status', 'lunas')
-                ->sum('jumlah');
+    $sisaBayar = $pendaftaran->total_biaya - $totalMasuk;
 
-            $sisaBayar = $totalBiaya - $totalMasukLain;
+    if ($validated['jumlah'] > $sisaBayar) {
+        return back()->withErrors(['jumlah' => 'Nominal melebihi sisa bayar. Sisa: Rp ' . number_format($sisaBayar, 0, ',', '.')])->withInput();
+    }
 
-            if ($tagihan->jumlah > $sisaBayar) {
-                return back()->with(
-                    'error',
-                    'Gagal update: nominal tagihan ini (Rp ' . number_format($tagihan->jumlah, 0, ',', '.')
-                    . ') melebihi sisa bayar (Rp ' . number_format($sisaBayar, 0, ',', '.') . ').'
-                );
-            }
-        }
+    DB::table('tagihan')->insert([
+        'pendaftaran_id' => $validated['pendaftaran_id'],
+        'jumlah'         => $validated['jumlah'],
+        'status'         => $validated['status'],
+        'tanggal_bayar'  => now(),
+        'jatuh_tempo'    => now(),
+        'created_at'     => now(),
+        'updated_at'     => now(),
+    ]);
 
-        DB::table('tagihan')->where('id', $id)->update([
-            'status' => $newStatus,
-            'updated_at' => now()
-        ]);
-
-        return back()->with('success', 'Status tagihan berhasil diperbarui!');
-    });
+    return back()->with('success', 'Pembayaran berhasil ditambahkan!');
+})->name('admin.tagihan.simpan');
 
 
     // 2. Data Siswa
