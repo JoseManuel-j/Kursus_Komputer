@@ -6,9 +6,10 @@
 
 @section('content')
 
-@if(session('success'))
+{{-- Ganti 'success' menjadi 'success_jadwal' --}}
+@if(session('success_jadwal'))
     <div class="alert alert-success alert-dismissible fade show" role="alert">
-        <strong>Berhasil!</strong> {{ session('success') }}
+        <strong>Berhasil!</strong> {{ session('success_jadwal') }}
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
 @endif

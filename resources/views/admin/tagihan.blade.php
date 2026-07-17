@@ -201,9 +201,7 @@
             $status = $tagihan->status ?? 'pending';
             $hasBukti = !empty($tagihan->buktiTransfer);
 
-            // LOGIKA STATUS CERDAS
             if ($status === 'pending') {
-                // Jika sudah diupload buktinya oleh siswa, tampilkan Verifikasi Admin
                 $teksStatus = $hasBukti ? 'Verifikasi Admin' : 'Belum Bayar';
                 $badgeClass = $hasBukti ? 'bg-info-subtle text-info-emphasis' : 'bg-secondary-subtle text-secondary';
             } elseif ($status === 'cicilan') {
@@ -222,6 +220,7 @@
             data-search="{{ strtolower($namaSiswa . ' ' . ($tagihan->id ? 'inv-' . str_pad($tagihan->id, 5, '0', STR_PAD_LEFT) : '')) }}"
             class="{{ $status === 'pending' ? 'table-light' : '' }}">
 
+            {{-- KOLOM 1: No. Bukti --}}
             <td class="py-3 px-4">
                 @if ($tagihan->id)
                     <span class="badge bg-light text-dark border px-2 rounded-pill font-monospace">
@@ -232,16 +231,19 @@
                 @endif
             </td>
 
+            {{-- KOLOM 2: Nominal cicilan --}}
             <td class="py-3 px-4 text-dark fw-medium">
                 {{ $tagihan->jumlah > 0 ? 'Rp ' . number_format($tagihan->jumlah, 0, ',', '.') : '—' }}
             </td>
 
+            {{-- KOLOM 3: Status --}}
             <td class="py-3 px-4 text-center">
                 <span class="badge {{ $badgeClass }} rounded-pill px-3">
                     {{ $teksStatus }}
                 </span>
             </td>
 
+            {{-- KOLOM 4: Tanggal Bayar --}}
             <td class="py-3 px-4">
                 @if (in_array($status, ['lunas', 'cicilan']) && !empty($tagihan->tagihan_updated_at))
                     <span class="text-success small fw-medium">
@@ -252,13 +254,13 @@
                 @endif
             </td>
 
+            {{-- KOLOM 5: Aksi (satu-satunya kolom form) --}}
             <td class="py-3 px-4 text-center">
                 @if ($tagihan->id)
                 <form action="/admin/tagihan/{{ $tagihan->id }}/update-status" method="POST"
                       class="d-flex align-items-center justify-content-center gap-1">
                     @csrf
-                    
-                    <!-- HANYA TAMPILKAN TOMBOL FOTO JIKA ADA BUKTI -->
+
                     @if($hasBukti)
                         <a href="{{ asset('uploads/bukti_pembayaran/' . $tagihan->buktiTransfer) }}"
                            target="_blank" class="btn btn-sm btn-outline-primary rounded-circle"
@@ -266,7 +268,11 @@
                             <i class="fa fa-image"></i>
                         </a>
                     @else
-                        <span class="text-muted small fst-italic me-2" style="font-size: 11px;">(No Photo)</span>
+                        <span class="btn btn-sm btn-outline-secondary rounded-circle disabled"
+                              style="opacity: .4; cursor: not-allowed;"
+                              title="Belum ada bukti transfer">
+                            <i class="fa fa-image"></i>
+                        </span>
                     @endif
 
                     <select name="status" class="form-select form-select-sm rounded-pill" style="width: 100px;">
