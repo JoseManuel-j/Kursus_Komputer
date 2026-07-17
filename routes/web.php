@@ -18,6 +18,10 @@ Route::get('/', function () {
     return view('home');
 });
 
+Route::get('/program', function () {
+    return view('program-kursus');
+});
+
 /*
 |--------------------------------------------------------------------------
 | AUTH
