@@ -2,13 +2,6 @@
 
 @section('content')
 
-@if(session('success'))
-    <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
-        <i class="fa fa-check-circle me-2"></i> <strong>Mantap!</strong> {{ session('success') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-@endif
-
 <div class="top-banner shadow-sm p-4 mb-4 bg-white rounded-4" style="border-left: 5px solid #7c3aed;">
     <h2 class="fw-bold mb-1">Selamat Datang, {{ auth()->user()->name ?? 'Siswa' }}! 👋</h2>
     <p class="text-muted mb-0">Selamat belajar dan kembangkan skill kamu di LPK Phitagoras.</p>
