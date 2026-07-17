@@ -27,30 +27,31 @@
 <!-- ========================================== -->
 <!-- BAGIAN 1: KELAS YANG SUDAH DIDAFTAR        -->
 <!-- ========================================== -->
-@if(isset($programTerdaftar) && $programTerdaftar)
+@if($programTerdaftar->isNotEmpty())
     <h5 class="fw-bold mb-3 mt-4" style="color: #4f46e5;">
         <i class="fa fa-check-circle me-2"></i>Kelas Saya Saat Ini
     </h5>
-    
-    <div class="row mb-5">
+
+    <div class="row mb-5 g-4">
+        @foreach($programTerdaftar as $program)
         <div class="col-md-4">
             <!-- Kartu diberi border warna khusus agar terlihat berbeda -->
             <div class="card shadow-sm h-100" style="border-radius: 15px; overflow: hidden; border: 2px solid #4f46e5;">
-                <img src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=1200" 
+                <img src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=1200"
                      class="class-image" style="height: 180px; object-fit: cover;"
-                     alt="{{ $programTerdaftar->nama_program }}">
-                     
+                     alt="{{ $program->nama_program }}">
+
                 <div class="card-body d-flex flex-column p-4">
-                    <span class="badge bg-{{ $programTerdaftar->tipe_kelas == 'intensif' ? 'danger' : 'primary' }} mb-2 align-self-start">
-                        {{ ucfirst($programTerdaftar->tipe_kelas) }}
+                    <span class="badge bg-{{ $program->tipe_kelas == 'intensif' ? 'danger' : 'primary' }} mb-2 align-self-start">
+                        {{ ucfirst($program->tipe_kelas) }}
                     </span>
-                    <h5 class="fw-bold">{{ $programTerdaftar->nama_program }}</h5>
-                    <p class="text-muted small mb-3">{{ $programTerdaftar->deskripsi }}</p>
-                    
+                    <h5 class="fw-bold">{{ $program->nama_program }}</h5>
+                    <p class="text-muted small mb-3">{{ $program->deskripsi }}</p>
+
                     <div class="mt-auto">
                         <div class="d-flex justify-content-between align-items-center mb-3">
-                            <span class="text-muted"><i class="fa fa-clock me-1"></i> {{ $programTerdaftar->jumlah_sesi }} Sesi</span>
-                            <strong class="text-primary">Rp {{ number_format($programTerdaftar->biaya, 0, ',', '.') }}</strong>
+                            <span class="text-muted"><i class="fa fa-clock me-1"></i> {{ $program->jumlah_sesi }} Sesi</span>
+                            <strong class="text-primary">Rp {{ number_format($program->biaya, 0, ',', '.') }}</strong>
                         </div>
                         <button class="btn btn-secondary w-100" style="border-radius: 8px;" disabled>
                             <i class="fa fa-check me-1"></i> Sedang Diikuti
@@ -59,11 +60,12 @@
                 </div>
             </div>
         </div>
+        @endforeach
     </div>
 
     <!-- Garis Pemisah -->
     <hr class="mb-5 text-muted opacity-25">
-    
+
     <h5 class="fw-bold mb-4" style="color: #111827;">
         <i class="fa fa-th-large me-2"></i> Kelas Lainnya
     </h5>
@@ -73,8 +75,7 @@
 <!-- BAGIAN 2: KELAS YANG BELUM DIDAFTAR        -->
 <!-- ========================================== -->
 <div class="row g-4">
-    <!-- Menggunakan $programLainnya jika ada, atau fallback ke $programs jika error -->
-    @forelse ($programLainnya ?? $programs as $program)
+    @forelse ($programLainnya as $program)
         <div class="col-md-4">
             <div class="card shadow-sm border-0 h-100" style="border-radius: 15px; overflow: hidden;">
                 <img src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=1200" 

@@ -172,7 +172,7 @@
     </div>
     
     <div class="progress" style="height: 6px; border-radius: 99px;">
-        <div class="progress-bar {{ $sisaTampil == 0 ? 'bg-success' : 'bg-warning' }}" style="width: {{ $progress }}%"></div>
+        <div class="progress-bar {{ $sisaTampil == 0 ? 'bg-success' : 'bg-warning' }}" style="width: {{ $progress }} %"></div>
     </div>
     
     <div class="d-flex justify-content-between small mt-1">
@@ -197,7 +197,7 @@
                     </thead>
                     <tbody>
                         @foreach ($programItems as $tagihan)
-                        @php
+                        @php    
                             $status = $tagihan->status ?? 'pending';
 
                             $badgeClass = match($status) {

@@ -103,19 +103,21 @@ Route::get('/angsuran', function () {
 |--------------------------------------------------------------------------
 */
 
-Route::middleware('auth')->group(function () {
-    Route::get('/kelas', function (Request $request) {
-        $userId = Auth::id(); 
+Route::get('/kelas', function (Request $request) {
+        $userId = Auth::id();
         $search = $request->input('search');
         $kategori = $request->input('kategori');
 
-        // 1. Cek status pendaftaran siswa
+        // 1. Ambil SEMUA pendaftaran aktif milik siswa ini (bukan cuma satu)
+        // FIX: sebelumnya pakai ->first() sehingga hanya 1 kelas yang kebawa
+        // walau siswa punya beberapa pendaftaran berstatus 'aktif' sekaligus.
         $kelasAktif = DB::table('pendaftaran')
             ->where('user_id', $userId)
             ->where('status', 'aktif')
-            ->first();
+            ->get();
 
-        $registeredProgramId = $kelasAktif ? $kelasAktif->program_id : null;
+        // Kumpulan program_id yang sudah didaftar siswa ini
+        $registeredProgramIds = $kelasAktif->pluck('program_id')->toArray();
 
         // 2. Tarik SEMUA program dari database dengan fitur pencarian
         $semuaProgram = DB::table('program_kursus')
@@ -128,17 +130,12 @@ Route::middleware('auth')->group(function () {
             ->get();
 
         // 3. Pisahkan data menjadi 2 kelompok (Yang sudah didaftar vs Belum didaftar)
-        $programTerdaftar = null;
-        $programLainnya = collect(); 
+        // FIX: $programTerdaftar sekarang COLLECTION (bisa berisi banyak kelas),
+        // bukan objek tunggal seperti sebelumnya.
+        $programTerdaftar = $semuaProgram->whereIn('id', $registeredProgramIds)->values();
+        $programLainnya = $semuaProgram->whereNotIn('id', $registeredProgramIds)->values();
 
-        if ($registeredProgramId) {
-            $programTerdaftar = $semuaProgram->firstWhere('id', $registeredProgramId);
-            $programLainnya = $semuaProgram->where('id', '!=', $registeredProgramId);
-        } else {
-            $programLainnya = $semuaProgram;
-        }
-
-        return view('kelas', compact('programTerdaftar', 'programLainnya', 'kelasAktif')); 
+        return view('kelas', compact('programTerdaftar', 'programLainnya', 'kelasAktif'));
     })->name('kelas');
 
     // Nampilin form konfirmasi pendaftaran
@@ -146,7 +143,7 @@ Route::middleware('auth')->group(function () {
     
     // Proses pendaftaran dari Dropdown
     Route::post('/pendaftaran', [PendaftaranController::class, 'store']);
-});
+
 
 /* AREA KHUSUS ADMIN */
 
