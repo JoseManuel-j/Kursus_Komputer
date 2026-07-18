@@ -77,10 +77,14 @@
             font-size: 24px;
             font-weight: 800;
             color: #172a45;
+            display: flex;
+            align-items: center;
         }
 
-        .brand-logo span {
-            color: #ffb800;
+        .brand-logo-img {
+            height: 48px;
+            width: auto;
+            display: block;
         }
 
         .nav-menu {
@@ -689,7 +693,7 @@
 <nav class="navbar-main">
     <div class="container">
 
-        <a href="/" class="brand-logo">Kursus<span>Komputer</span></a>
+        <a href="/" class="brand-logo"><img src="{{ asset('Images/logo/logo-phitagoras.png') }}" alt="LPK Phitagoras" class="brand-logo-img"></a>
 
         <ul class="nav-menu">
             <li><a href="#galeri" class="active">Home</a></li>
@@ -737,61 +741,97 @@
 
                 <div class="slide" data-fallback="1">
                     <img src="{{ asset('Images/kegiatan/kegiatan-1.jpg') }}"
-                         alt="Kegiatan Belajar Microsoft Office"
+                         alt="Pelatihan Komputer Pegawai Kecamatan Ciputat"
                          onerror="this.parentElement.classList.add('img-error')">
-                    <div class="slide-fallback-icon"><i class="fa fa-file-word"></i></div>
+                    <div class="slide-fallback-icon"><i class="fa fa-building"></i></div>
                     <div class="slide-caption">
-                        <span class="tag">Microsoft Office</span>
-                        <h3>Pelatihan Microsoft Office</h3>
-                        <p>Siswa berlatih langsung praktik Word, Excel, dan PowerPoint bersama instruktur.</p>
+                        <span class="tag">Pelatihan Instansi</span>
+                        <h3>Pelatihan Komputer Pegawai Kec. Ciputat</h3>
+                        <p>Pelatihan komputer untuk pegawai Kecamatan Ciputat, 16-19 November 2022.</p>
                     </div>
                 </div>
 
                 <div class="slide" data-fallback="2">
                     <img src="{{ asset('Images/kegiatan/kegiatan-2.jpg') }}"
-                         alt="Kegiatan Design Grafis"
+                         alt="Praktik Komputer Pegawai Kecamatan Ciputat"
                          onerror="this.parentElement.classList.add('img-error')">
-                    <div class="slide-fallback-icon"><i class="fa fa-palette"></i></div>
+                    <div class="slide-fallback-icon"><i class="fa fa-desktop"></i></div>
                     <div class="slide-caption">
-                        <span class="tag">Design Grafis</span>
-                        <h3>Praktik Design Grafis</h3>
-                        <p>Kelas Photoshop dan Illustrator untuk mengasah kemampuan desain visual siswa.</p>
+                        <span class="tag">Pelatihan Instansi</span>
+                        <h3>Praktik Langsung Bersama Instruktur</h3>
+                        <p>Peserta pelatihan pegawai Kecamatan Ciputat praktik langsung didampingi instruktur.</p>
                     </div>
                 </div>
 
                 <div class="slide" data-fallback="3">
                     <img src="{{ asset('Images/kegiatan/kegiatan-3.jpg') }}"
-                         alt="Kegiatan Web Development"
+                         alt="Pelatihan Komputer Ibu PKK Rempoa"
                          onerror="this.parentElement.classList.add('img-error')">
-                    <div class="slide-fallback-icon"><i class="fa fa-code"></i></div>
+                    <div class="slide-fallback-icon"><i class="fa fa-users"></i></div>
                     <div class="slide-caption">
-                        <span class="tag">Web Development</span>
-                        <h3>Praktik Web Development</h3>
-                        <p>Siswa belajar membangun website menggunakan HTML, CSS, PHP, dan Laravel.</p>
+                        <span class="tag">Pelatihan PKK</span>
+                        <h3>Pelatihan Komputer Ibu PKK Rempoa</h3>
+                        <p>Kegiatan pelatihan komputer untuk Ibu PKK Rempoa, Juni 2025.</p>
                     </div>
                 </div>
 
                 <div class="slide" data-fallback="4">
                     <img src="{{ asset('Images/kegiatan/kegiatan-4.jpg') }}"
-                         alt="Penyerahan Sertifikat"
+                         alt="Praktik Microsoft Office Ibu PKK Rempoa"
                          onerror="this.parentElement.classList.add('img-error')">
-                    <div class="slide-fallback-icon"><i class="fa fa-certificate"></i></div>
+                    <div class="slide-fallback-icon"><i class="fa fa-file-word"></i></div>
                     <div class="slide-caption">
-                        <span class="tag">Sertifikasi</span>
-                        <h3>Penyerahan Sertifikat Kelulusan</h3>
-                        <p>Momen kebanggaan siswa saat menerima sertifikat setelah menyelesaikan program.</p>
+                        <span class="tag">Pelatihan PKK</span>
+                        <h3>Praktik Microsoft Office Bersama Ibu PKK</h3>
+                        <p>Peserta Ibu PKK Rempoa antusias mempraktikkan materi Microsoft Office.</p>
                     </div>
                 </div>
 
                 <div class="slide" data-fallback="5">
                     <img src="{{ asset('Images/kegiatan/kegiatan-5.jpg') }}"
-                         alt="Suasana Kelas"
+                         alt="Pengarahan Sebelum Pelatihan Kader PKK Rengas"
                          onerror="this.parentElement.classList.add('img-error')">
-                    <div class="slide-fallback-icon"><i class="fa fa-users"></i></div>
+                    <div class="slide-fallback-icon"><i class="fa fa-chalkboard-user"></i></div>
                     <div class="slide-caption">
-                        <span class="tag">Suasana Belajar</span>
-                        <h3>Suasana Kelas LPK Phitagoras</h3>
-                        <p>Lingkungan belajar yang nyaman dan interaktif antara siswa dan instruktur.</p>
+                        <span class="tag">Pelatihan PKK</span>
+                        <h3>Pengarahan Kader PKK Rengas</h3>
+                        <p>Pengarahan dari Pak Purwiyanto sebelum pelatihan kader PKK Rengas dimulai.</p>
+                    </div>
+                </div>
+
+                <div class="slide" data-fallback="6">
+                    <img src="{{ asset('Images/kegiatan/kegiatan-6.jpg') }}"
+                         alt="Pelatihan Komputer Kader PKK Rengas"
+                         onerror="this.parentElement.classList.add('img-error')">
+                    <div class="slide-fallback-icon"><i class="fa fa-laptop"></i></div>
+                    <div class="slide-caption">
+                        <span class="tag">Pelatihan PKK</span>
+                        <h3>Pelatihan Komputer Kader PKK Rengas</h3>
+                        <p>Kegiatan pelatihan komputer untuk kader PKK Rengas, Juni 2022.</p>
+                    </div>
+                </div>
+
+                <div class="slide" data-fallback="7">
+                    <img src="{{ asset('Images/kegiatan/kegiatan-7.jpg') }}"
+                         alt="Pelatihan Kader PKK Kecamatan Ciputat Timur"
+                         onerror="this.parentElement.classList.add('img-error')">
+                    <div class="slide-fallback-icon"><i class="fa fa-people-group"></i></div>
+                    <div class="slide-caption">
+                        <span class="tag">Pelatihan PKK</span>
+                        <h3>Pelatihan Kader PKK Kec. Ciputat Timur</h3>
+                        <p>Foto bersama peserta kader PKK se-Kecamatan Ciputat Timur bersama Pak Purwiyanto.</p>
+                    </div>
+                </div>
+
+                <div class="slide" data-fallback="8">
+                    <img src="{{ asset('Images/kegiatan/kegiatan-8.jpg') }}"
+                         alt="Suasana Pelatihan Pegawai Kecamatan Ciputat"
+                         onerror="this.parentElement.classList.add('img-error')">
+                    <div class="slide-fallback-icon"><i class="fa fa-user-group"></i></div>
+                    <div class="slide-caption">
+                        <span class="tag">Pelatihan Instansi</span>
+                        <h3>Suasana Kelas Pegawai Kecamatan Ciputat</h3>
+                        <p>Suasana belajar yang interaktif selama pelatihan komputer pegawai Kec. Ciputat.</p>
                     </div>
                 </div>
 
@@ -802,22 +842,34 @@
         <div class="thumb-strip" id="thumbStrip">
             <div class="thumb-item active" data-fallback="1" onclick="goToSlide(0)">
                 <img src="{{ asset('Images/kegiatan/kegiatan-1.jpg') }}" alt="" onerror="this.parentElement.classList.add('img-error')">
-                <span>Ms. Office</span>
+                <span>Pegawai Ciputat</span>
             </div>
             <div class="thumb-item" data-fallback="2" onclick="goToSlide(1)">
                 <img src="{{ asset('Images/kegiatan/kegiatan-2.jpg') }}" alt="" onerror="this.parentElement.classList.add('img-error')">
-                <span>Design Grafis</span>
+                <span>Praktik Bersama</span>
             </div>
             <div class="thumb-item" data-fallback="3" onclick="goToSlide(2)">
                 <img src="{{ asset('Images/kegiatan/kegiatan-3.jpg') }}" alt="" onerror="this.parentElement.classList.add('img-error')">
-                <span>Web Dev</span>
+                <span>PKK Rempoa</span>
             </div>
             <div class="thumb-item" data-fallback="4" onclick="goToSlide(3)">
                 <img src="{{ asset('Images/kegiatan/kegiatan-4.jpg') }}" alt="" onerror="this.parentElement.classList.add('img-error')">
-                <span>Sertifikat</span>
+                <span>Ms. Office</span>
             </div>
             <div class="thumb-item" data-fallback="5" onclick="goToSlide(4)">
                 <img src="{{ asset('Images/kegiatan/kegiatan-5.jpg') }}" alt="" onerror="this.parentElement.classList.add('img-error')">
+                <span>PKK Rengas</span>
+            </div>
+            <div class="thumb-item" data-fallback="6" onclick="goToSlide(5)">
+                <img src="{{ asset('Images/kegiatan/kegiatan-6.jpg') }}" alt="" onerror="this.parentElement.classList.add('img-error')">
+                <span>Kader PKK</span>
+            </div>
+            <div class="thumb-item" data-fallback="7" onclick="goToSlide(6)">
+                <img src="{{ asset('Images/kegiatan/kegiatan-7.jpg') }}" alt="" onerror="this.parentElement.classList.add('img-error')">
+                <span>Ciputat Timur</span>
+            </div>
+            <div class="thumb-item" data-fallback="8" onclick="goToSlide(7)">
+                <img src="{{ asset('Images/kegiatan/kegiatan-8.jpg') }}" alt="" onerror="this.parentElement.classList.add('img-error')">
                 <span>Suasana Kelas</span>
             </div>
         </div>

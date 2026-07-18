@@ -234,7 +234,7 @@
                 <div class="col-7 border-end">
                     <h6 class="fw-bold mb-1">Transfer Bank</h6>
                     <div class="text-muted small">Bank BCA</div>
-                    <div class="fw-bold fs-6">1234 5678 90</div>
+                    <div class="fw-bold fs-6">6090012451</div>
                     <div class="small">A/N LPK Phitagoras</div>
                 </div>
                 <div class="col-5 text-center">

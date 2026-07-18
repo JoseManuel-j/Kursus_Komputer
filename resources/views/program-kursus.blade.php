@@ -77,10 +77,14 @@
             font-size: 24px;
             font-weight: 800;
             color: #172a45;
+            display: flex;
+            align-items: center;
         }
 
-        .brand-logo span {
-            color: #ffb800;
+        .brand-logo-img {
+            height: 48px;
+            width: auto;
+            display: block;
         }
 
         .nav-menu {
@@ -491,7 +495,7 @@
 <nav class="navbar-main">
     <div class="container">
 
-        <a href="/" class="brand-logo">Kursus<span>Komputer</span></a>
+        <a href="/" class="brand-logo"><img src="{{ asset('Images/logo/logo-phitagoras.png') }}" alt="LPK Phitagoras" class="brand-logo-img"></a>
 
         <ul class="nav-menu">
             <li><a href="/">Home</a></li>
