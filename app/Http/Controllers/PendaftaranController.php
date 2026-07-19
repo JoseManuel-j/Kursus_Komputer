@@ -40,7 +40,14 @@ class PendaftaranController extends Controller
 
         $program = DB::table('program_kursus')->where('id', $request->program_id)->first();
         $biayaPendaftaran = 100000;
-        $totalTagihan = $program->biaya + $biayaPendaftaran;
+
+        // FIX: cast ke (int) karena kolom 'biaya' di database bertipe decimal,
+        // sehingga $program->biaya dikembalikan sebagai string desimal (mis. "2500000.00").
+        // Kalau tidak di-cast, $totalTagihan akan jadi float, sedangkan $totalCicilan
+        // (dari input cicilan yang sudah dibersihkan) adalah int murni.
+        // Perbandingan strict (!==) antara int dan float SELALU dianggap tidak sama,
+        // meskipun nilainya identik -> makanya validasi selalu gagal walau sudah pas.
+        $totalTagihan = (int) $program->biaya + $biayaPendaftaran;
 
         // Validasi khusus cicilan (belum butuh file, jadi aman di awal)
         if ($request->tipe_pembayaran == 'angsuran') {

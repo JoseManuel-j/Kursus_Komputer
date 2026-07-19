@@ -244,8 +244,14 @@
             </td>
 
             {{-- KOLOM 4: Tanggal Bayar --}}
+            {{-- FIX: sebelumnya kondisi ini juga mencakup status 'cicilan', padahal
+                 'cicilan' artinya BELUM dibayar (masih dijadwalkan/dicicil).
+                 Kolom updated_at selalu ke-refresh setiap kali admin klik simpan,
+                 jadi status cicilan yang baru saja disave ikut kebawa tanggal hari ini
+                 seolah-olah sudah dibayar. Sekarang tanggal cuma tampil kalau
+                 statusnya benar-benar 'lunas'. --}}
             <td class="py-3 px-4">
-                @if (in_array($status, ['lunas', 'cicilan']) && !empty($tagihan->tagihan_updated_at))
+                @if ($status === 'lunas' && !empty($tagihan->tagihan_updated_at))
                     <span class="text-success small fw-medium">
                         {{ \Carbon\Carbon::parse($tagihan->tagihan_updated_at)->format('d M Y') }}
                     </span>

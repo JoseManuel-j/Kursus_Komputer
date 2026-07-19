@@ -105,15 +105,25 @@ Route::get('/angsuran', function () {
 })->middleware('auth')->name('angsuran');
 
 // --- Rute untuk Siswa Upload Bukti Bayar ---
+// FIX: sebelumnya setelah upload bukti, kodenya INSERT baris tagihan baru
+// dengan status 'pending'. Padahal baris cicilan yang sudah dijadwalkan
+// ($tagihan, hasil query di atas) seharusnya di-UPDATE statusnya jadi
+// 'pending', bukan dibiarkan tetap 'cicilan' + ditambah baris baru.
+// Akibatnya baris cicilan lama nyangkut selamanya di status 'Cicilan'
+// walau sudah dibayar, dan muncul baris duplikat yang tidak sinkron
+// dengan tampilan "Detil Angsuran".
 Route::post('/angsuran/bayar', function (Request $request) {
     // 1. Validasi input
+    // FIX: 'jumlah' dihapus dari validasi karena form modal di angsuran.blade.php
+    // tidak pernah mengirim field ini. Nominal yang dibayar sudah ditentukan
+    // dari baris cicilan yang tersimpan di database (lihat langkah 3 di bawah),
+    // bukan dari input siswa -- supaya siswa tidak bisa memanipulasi nominal.
     $request->validate([
         'pendaftaran_id' => 'required|exists:pendaftaran,id',
-        'jumlah'         => 'required|numeric|min:1',
         'bukti_bayar'    => 'required|image|mimes:jpeg,png,jpg|max:2048',
-    ]); 
+    ]);
 
-      return DB::transaction(function () use ($request) {
+    return DB::transaction(function () use ($request) {
         // Ambil baris cicilan PALING AWAL yang belum dibayar, kunci baris ini
         // supaya aman dari double-klik / race condition
         $tagihan = DB::table('tagihan')
@@ -127,25 +137,23 @@ Route::post('/angsuran/bayar', function (Request $request) {
             return back()->with('error', 'Tidak ada angsuran yang perlu dibayar. Mungkin sudah lunas semua atau sedang diverifikasi admin.');
         }
 
-    // 2. Proses upload file
-    $file = $request->file('bukti_bayar');
-    $namaFile = time() . '_' . $file->getClientOriginalName();
-    $file->move(public_path('uploads/bukti_pembayaran'), $namaFile);
+        // 2. Proses upload file
+        $file = $request->file('bukti_bayar');
+        $namaFile = time() . '_' . $file->getClientOriginalName();
+        $file->move(public_path('uploads/bukti_pembayaran'), $namaFile);
 
-    // 3. Simpan ke database dengan status 'pending'
-    DB::table('tagihan')->insert([
-        'pendaftaran_id' => $request->pendaftaran_id,
-        'jumlah'         => $request->jumlah,
-        'status'         => 'pending',
-        'buktiTransfer'  => $namaFile,
-        'tanggal_bayar'  => now(),
-        'jatuh_tempo'    => now(),
-        'created_at'     => now(),
-        'updated_at'     => now(),
-    ]);
+        // 3. FIX: UPDATE baris cicilan yang sudah ada, JANGAN insert baris baru.
+        // Baris cicilan ke-N yang tadi ditemukan itulah yang harus berubah
+        // statusnya jadi 'pending' (menunggu verifikasi admin).
+        DB::table('tagihan')->where('id', $tagihan->id)->update([
+            'status'        => 'pending',
+            'buktiTransfer' => $namaFile,
+            'tanggal_bayar' => now(),
+            'updated_at'    => now(),
+        ]);
 
-    return back()->with('success', 'Bukti pembayaran berhasil dikirim! Menunggu konfirmasi Admin.');
-      });
+        return back()->with('success', 'Bukti pembayaran berhasil dikirim! Menunggu konfirmasi Admin.');
+    });
 })->middleware('auth')->name('siswa.angsuran.bayar');
 // ============================================================================
 
@@ -246,50 +254,54 @@ Route::middleware('auth')->group(function () {
         return view('admin.dashboard', compact('totalSiswa', 'totalProgram', 'totalPendaftar', 'pendaftaran'));
     })->name('admin.dashboard');
 
-    // Update Status Pembayaran Manual via Dropdown (dengan validasi sisa bayar)
-Route::post('/admin/tagihan/simpan', function (Request $request) {
-    if (Auth::user()->role !== 'admin') return redirect('/dashboard');
+    // Tambah Pembayaran / Cicilan Manual oleh Admin (dari modal "Tambah Pembayaran")
+    // Tanpa upload bukti transfer (admin yang input langsung dari cash/transaksi
+    // yang sudah diverifikasi sendiri) + validasi nominal tidak melebihi sisa bayar
+    Route::post('/admin/tagihan/simpan', function (Request $request) {
+        if (Auth::user()->role !== 'admin') return redirect('/dashboard');
 
-    $validated = $request->validate([
-        'pendaftaran_id' => 'required|exists:pendaftaran,id',
-        'jumlah'         => 'required|numeric|min:1',
-        'status'         => 'required|in:pending,cicilan,lunas',
-    ]);
+        $validated = $request->validate([
+            'pendaftaran_id' => 'required|exists:pendaftaran,id',
+            'jumlah'         => 'required|numeric|min:1',
+            'status'         => 'required|in:pending,cicilan,lunas',
+        ]);
 
-    // Ambil total biaya program
-    $pendaftaran = DB::table('pendaftaran')
-        ->join('program_kursus', 'pendaftaran.program_id', '=', 'program_kursus.id')
-        ->where('pendaftaran.id', $validated['pendaftaran_id'])
-        ->select('program_kursus.biaya as total_biaya')
-        ->first();
+        // Ambil total biaya program dari pendaftaran yang dipilih
+        $pendaftaran = DB::table('pendaftaran')
+            ->join('program_kursus', 'pendaftaran.program_id', '=', 'program_kursus.id')
+            ->where('pendaftaran.id', $validated['pendaftaran_id'])
+            ->select('program_kursus.biaya as total_biaya')
+            ->first();
 
-    $totalBiaya = $pendaftaran->total_biaya ?? 0;
+        $totalBiaya = $pendaftaran->total_biaya ?? 0;
 
-    // Hitung uang masuk (Lunas)
-    $totalMasuk = DB::table('tagihan')
-        ->where('pendaftaran_id', $validated['pendaftaran_id'])
-        ->where('status', 'lunas')
-        ->sum('jumlah');
+        // Hitung uang masuk (HANYA yang statusnya 'lunas')
+        $totalMasuk = DB::table('tagihan')
+            ->where('pendaftaran_id', $validated['pendaftaran_id'])
+            ->where('status', 'lunas')
+            ->sum('jumlah');
 
-    $sisaBayar = $pendaftaran->total_biaya - $totalMasuk;
+        $sisaBayar = $totalBiaya - $totalMasuk;
 
-    if ($validated['jumlah'] > $sisaBayar) {
-        return back()->withErrors(['jumlah' => 'Nominal melebihi sisa bayar. Sisa: Rp ' . number_format($sisaBayar, 0, ',', '.')])->withInput();
-    }
+        // Validasi: nominal baru tidak boleh melebihi sisa bayar
+        if ($validated['jumlah'] > $sisaBayar) {
+            return back()
+                ->withErrors(['jumlah' => 'Nominal melebihi sisa bayar. Sisa: Rp ' . number_format($sisaBayar, 0, ',', '.')])
+                ->withInput();
+        }
 
-    DB::table('tagihan')->insert([
-        'pendaftaran_id' => $validated['pendaftaran_id'],
-        'jumlah'         => $validated['jumlah'],
-        'status'         => $validated['status'],
-        'tanggal_bayar'  => now(),
-        'jatuh_tempo'    => now(),
-        'created_at'     => now(),
-        'updated_at'     => now(),
-    ]);
+        DB::table('tagihan')->insert([
+            'pendaftaran_id' => $validated['pendaftaran_id'],
+            'jumlah'         => $validated['jumlah'],
+            'status'         => $validated['status'],
+            'tanggal_bayar'  => now(),
+            'jatuh_tempo'    => now(),
+            'created_at'     => now(),
+            'updated_at'     => now(),
+        ]);
 
-    return back()->with('success', 'Pembayaran berhasil ditambahkan!');
-})->name('admin.tagihan.simpan');
-
+        return back()->with('success', 'Pembayaran berhasil ditambahkan!');
+    })->name('admin.tagihan.simpan');
 
     // 2. Data Siswa
     Route::get('/admin/siswa', function () {
@@ -354,60 +366,7 @@ Route::post('/admin/tagihan/simpan', function (Request $request) {
     Route::get('/admin/jadwal', [JadwalController::class, 'index'])->name('admin.jadwal.index');
     // ========================================================================
 
-// 5. Tagihan & Bukti Pembayaran
-
-    // 8. Tambah Pembayaran / Cicilan Manual oleh Admin
-    // Tanpa upload bukti transfer (admin yang input langsung dari cash/transaksi
-    // yang sudah diverifikasi sendiri) + validasi nominal tidak melebihi sisa bayar
-// Pastikan kode ini ADA di dalam routes/web.php Anda
-Route::post('/admin/tagihan/simpan', function (Request $request) {
-    if (Auth::user()->role !== 'admin') return redirect('/dashboard');
-
-    $validated = $request->validate([
-        'pendaftaran_id' => 'required|exists:pendaftaran,id',
-        'jumlah'         => 'required|numeric|min:1',
-        'status'         => 'required|in:pending,cicilan,lunas',
-    ]);
-
-    // Ambil total biaya program dari pendaftaran yang dipilih
-    $pendaftaran = DB::table('pendaftaran')
-        ->join('program_kursus', 'pendaftaran.program_id', '=', 'program_kursus.id')
-        ->where('pendaftaran.id', $validated['pendaftaran_id'])
-        ->select('program_kursus.biaya as total_biaya')
-        ->first();
-
-    $totalBiaya = $pendaftaran->total_biaya ?? 0;
-
-    // Hitung uang masuk (HANYA yang statusnya 'lunas')
-    $totalMasuk = DB::table('tagihan')
-        ->where('pendaftaran_id', $validated['pendaftaran_id'])
-        ->where('status', 'lunas')
-        ->sum('jumlah');
-
-    $sisaBayar = $totalBiaya - $totalMasuk;
-
-    // Validasi: nominal baru tidak boleh melebihi sisa bayar
-    if ($validated['jumlah'] > $sisaBayar) {
-        return back()
-            ->withErrors(['jumlah' => 'Nominal melebihi sisa bayar. Sisa: Rp ' . number_format($sisaBayar, 0, ',', '.')])
-            ->withInput();
-    }
-
-    DB::table('tagihan')->insert([
-        'pendaftaran_id' => $validated['pendaftaran_id'],
-        'jumlah'         => $validated['jumlah'],
-        'status'         => $validated['status'],
-        'tanggal_bayar'  => now(),
-        'jatuh_tempo'    => now(),
-        'created_at'     => now(),
-        'updated_at'     => now(),
-    ]);
-
-    return back()->with('success', 'Pembayaran berhasil ditambahkan!');
-})->name('admin.tagihan.simpan'); // <--- Bagian ini yang dicari oleh Laravel
-
-        return back()->with('success', 'Pembayaran berhasil ditambahkan!');
-    })->name('admin.tagihan.simpan');
+    // 5. Tagihan & Bukti Pembayaran
 
     Route::get('/admin/tagihan', function () {
         if (Auth::user()->role !== 'admin') return redirect('/dashboard');
@@ -473,6 +432,14 @@ Route::post('/admin/tagihan/simpan', function (Request $request) {
 
         return back()->with('success', 'Bukti pembayaran ditolak. Silakan hubungi siswa untuk upload ulang.');
     });
+
+    // 8. FIX: Route ini SEBELUMNYA TIDAK ADA — inilah penyebab 404 di
+    // /admin/tagihan/{id}/update-status. Form dropdown status di halaman
+    // "Tagihan & Bukti" mengirim POST ke path ini, dan sekarang diarahkan
+    // ke TagihanController@updateStatus (yang sudah ada dan siap dipakai).
+    Route::post('/admin/tagihan/{id}/update-status', [TagihanController::class, 'updateStatus'])
+        ->name('admin.tagihan.update-status');
+});
 
 /* AREA KHUSUS INSTRUKTUR */
 Route::middleware('auth')->group(function () {
