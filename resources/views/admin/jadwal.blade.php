@@ -2,7 +2,7 @@
 
 @section('title', 'Kelola Jadwal Murid')
 @section('page_title', 'Data Jadwal Murid')
-@section('page_desc', 'Atur jadwal untuk murid yang sudah melakukan pembayaran (Lunas).')
+@section('page_desc', 'Atur jadwal untuk murid yang sudah bayar (lunas maupun cicilan).')
 
 @section('content')
 
@@ -25,7 +25,7 @@
                     @csrf
                     
                     <div class="mb-3">
-                        <label class="form-label fw-bold small">Pilih Murid (Sudah Lunas)</label>
+                        <label class="form-label fw-bold small">Pilih Murid (Sudah Bayar / Cicilan)</label>
                         <select name="pendaftaran_id" class="form-select" required>
                             <option value="">-- Pilih Murid --</option>
                             @foreach($muridLunas as $murid)
@@ -34,7 +34,7 @@
                                 </option>
                             @endforeach
                         </select>
-                        <div class="form-text" style="font-size: 11px;">Hanya murid dengan tagihan 'Lunas' yang muncul di sini.</div>
+                        <div class="form-text" style="font-size: 11px;">Murid dengan tagihan 'Lunas' atau lagi 'Cicilan' (udah bayar sebagian) muncul di sini. Yang belum bayar sama sekali ('Pending') nggak muncul.</div>
                     </div>
 
                     <div class="mb-3">

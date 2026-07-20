@@ -482,7 +482,6 @@
         <div class="topbar-right">
             <a href="#" title="Instagram"><i class="fab fa-instagram"></i></a>
             <a href="#" title="WhatsApp"><i class="fab fa-whatsapp"></i></a>
-            <a href="#" title="YouTube"><i class="fab fa-youtube"></i></a>
         </div>
     </div>
 </div>

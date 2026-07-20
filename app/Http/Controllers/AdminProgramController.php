@@ -27,6 +27,7 @@ class AdminProgramController extends Controller
         $validated = $request->validate([
             'nama_program' => 'required|string|max:255',
             'tipe_kelas'   => 'required|string|max:255',
+            'kategori'     => 'required|in:paket,satuan',
             'deskripsi'     => 'required|string',
             'jumlah_sesi'   => 'required|integer|min:1',
             'biaya'         => 'required|numeric|min:0',
@@ -55,6 +56,7 @@ class AdminProgramController extends Controller
         $validated = $request->validate([
             'nama_program' => 'required|string|max:255',
             'tipe_kelas'   => 'required|string|max:255',
+            'kategori'     => 'required|in:paket,satuan',
             'deskripsi'     => 'required|string',
             'jumlah_sesi'   => 'required|integer|min:1',
             'biaya'         => 'required|numeric|min:0',

@@ -49,6 +49,19 @@
     @if(session('error'))
         <div class="alert alert-danger">
             {{ session('error') }}
+            @if(session('unverified_email'))
+                <form action="{{ route('verification.send') }}" method="POST" class="mt-2">
+                    @csrf
+                    <input type="hidden" name="email" value="{{ session('unverified_email') }}">
+                    <button type="submit" class="btn btn-sm btn-outline-dark">Kirim Ulang Link Verifikasi</button>
+                </form>
+            @endif
+        </div>
+    @endif
+
+    @if(session('success'))
+        <div class="alert alert-success">
+            {{ session('success') }}
         </div>
     @endif
 

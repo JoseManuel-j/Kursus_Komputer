@@ -1,56 +1,49 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Models;
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
-class TagihanController extends Controller
+class Tagihan extends Model
 {
-    // Fungsi untuk menampilkan halaman admin tagihan
-    public function index()
-    {
-        $tagihans = DB::table('tagihan')
-            ->join('pendaftaran', 'tagihan.pendaftaran_id', '=', 'pendaftaran.id')
-            ->join('users', 'pendaftaran.user_id', '=', 'users.id')
-            ->join('program_kursus', 'pendaftaran.program_id', '=', 'program_kursus.id')
-            ->select(
-                'tagihan.*', 
-                'users.name as nama_siswa', 
-                'program_kursus.nama_program',
-                'tagihan.updated_at as tagihan_updated_at'
-            )
-            ->get();
+    use HasFactory;
 
-        return view('admin.tagihan', compact('tagihans'));
+    protected $table = 'tagihan';
+    protected $guarded = ['id'];
+
+    protected $casts = [
+        'jumlah'       => 'decimal:2',
+        'jatuh_tempo'  => 'date',
+    ];
+
+    // Relasi ke Pendaftaran induknya
+    public function pendaftaran()
+    {
+        return $this->belongsTo(Pendaftaran::class, 'pendaftaran_id');
     }
 
-    // Fungsi untuk memperbarui status (Dipanggil saat tombol Simpan diklik)
-    public function updateStatus(Request $request, $id)
+    // Riwayat pembayaran/cicilan untuk tagihan ini
+    public function pembayaran()
     {
-        $request->validate(['status' => 'required']);
+        return $this->hasMany(Pembayaran::class, 'tagihan_id');
+    }
 
-        // FIX: sebelumnya method ini cuma update kolom 'status' & 'updated_at',
-        // tidak pernah mengisi kolom 'tanggal_bayar'. Akibatnya, kalau admin
-        // mengubah status jadi 'lunas' lewat dropdown ini, kolom tanggal_bayar
-        // tetap NULL selamanya -> di halaman siswa (/angsuran) kolom "Tgl Bayar"
-        // jadi tampil '-' walau statusnya sudah Lunas.
-        // Sekarang: begitu status diubah jadi 'lunas', tanggal_bayar diisi
-        // dengan waktu saat ini (kalau belum pernah terisi sebelumnya).
-        $data = [
-            'status'     => $request->status,
-            'updated_at' => now(),
-        ];
-
-        if ($request->status === 'lunas') {
-            $tagihanLama = DB::table('tagihan')->where('id', $id)->first();
-            if (empty($tagihanLama->tanggal_bayar)) {
-                $data['tanggal_bayar'] = now();
-            }
+    // Total yang sudah masuk lewat tabel `pembayaran` (dipakai Api\TagihanController)
+    public function getTotalDibayarAttribute()
+    {
+        // Kalau relasi 'pembayaran' sudah di-load (eager load), hitung dari collection
+        // biar nggak query ulang ke DB tiap kali accessor ini dipanggil.
+        if ($this->relationLoaded('pembayaran')) {
+            return $this->pembayaran->sum('jumlah_bayar');
         }
 
-        DB::table('tagihan')->where('id', $id)->update($data);
+        return $this->pembayaran()->sum('jumlah_bayar');
+    }
 
-        return back()->with('success', 'Status tagihan berhasil diperbarui!');
+    // Sisa yang harus dibayar siswa untuk tagihan ini
+    public function getSisaTagihanAttribute()
+    {
+        return max(0, (float) $this->jumlah - (float) $this->total_dibayar);
     }
 }

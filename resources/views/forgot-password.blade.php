@@ -49,7 +49,17 @@
         Masukkan email terdaftar kamu. Kami akan mengirimkan link verifikasi untuk mengatur ulang password.
     </p>
 
-    <form action="#" method="POST">
+    @if(session('success'))
+        <div class="alert alert-success">{{ session('success') }}</div>
+    @endif
+    @if(session('error'))
+        <div class="alert alert-danger">{{ session('error') }}</div>
+    @endif
+    @error('email')
+        <div class="alert alert-danger">{{ $message }}</div>
+    @enderror
+
+    <form action="{{ route('password.email') }}" method="POST">
         @csrf
 
         <div class="mb-4">
@@ -57,6 +67,7 @@
             <input type="email"
                    name="email"
                    class="form-control"
+                   value="{{ old('email') }}"
                    placeholder="Masukkan email Anda" required>
         </div>
 

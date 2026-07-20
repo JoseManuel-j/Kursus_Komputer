@@ -41,6 +41,15 @@ class PendaftaranController extends Controller
         $program = DB::table('program_kursus')->where('id', $request->program_id)->first();
         $biayaPendaftaran = 100000;
 
+        // Cicilan (angsuran) cuma boleh buat Program Paket. Program Satuan
+        // wajib bayar lunas. Dicek di sini juga (bukan cuma di JS) supaya
+        // nggak bisa diakalin lewat request manual/Postman.
+        if ($request->tipe_pembayaran == 'angsuran' && ($program->kategori ?? 'satuan') !== 'paket') {
+            return back()
+                ->withErrors(['tipe_pembayaran' => 'Cicilan hanya tersedia untuk Program Paket. Program Satuan wajib dibayar lunas.'])
+                ->withInput();
+        }
+
         // FIX: cast ke (int) karena kolom 'biaya' di database bertipe decimal,
         // sehingga $program->biaya dikembalikan sebagai string desimal (mis. "2500000.00").
         // Kalau tidak di-cast, $totalTagihan akan jadi float, sedangkan $totalCicilan

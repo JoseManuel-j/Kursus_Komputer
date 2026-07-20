@@ -93,7 +93,7 @@
                     <select name="program_id" id="program_select" class="form-select" required>
                         <option value="" disabled {{ is_null($programTerpilih) ? 'selected' : '' }}>-- Pilih Program Kursus --</option>
                         @foreach($semuaProgram as $prog)
-                            <option value="{{ $prog->id }}" data-biaya="{{ $prog->biaya }}" {{ $prog->id == $programTerpilih ? 'selected' : '' }}>
+                            <option value="{{ $prog->id }}" data-biaya="{{ $prog->biaya }}" data-kategori="{{ $prog->kategori ?? 'satuan' }}" {{ $prog->id == $programTerpilih ? 'selected' : '' }}>
                                 {{ $prog->nama_program }} ({{ ucfirst($prog->tipe_kelas) }}) - Rp {{ number_format($prog->biaya, 0, ',', '.') }}
                             </option>
                         @endforeach
@@ -122,8 +122,11 @@
                     <label class="form-label fw-bold">Pilih Metode Pembayaran</label>
                     <select name="tipe_pembayaran" id="tipe_pembayaran" class="form-select" onchange="toggleCicilan()" required>
                         <option value="lunas">Bayar Lunas</option>
-                        <option value="angsuran">Cicilan (Maksimal 3x)</option>
+                        <option value="angsuran" id="opsi_angsuran">Cicilan (Maksimal 3x)</option>
                     </select>
+                    <small id="info_kategori_satuan" class="text-danger fw-bold d-none">
+                        * Program Satuan wajib dibayar lunas, cicilan hanya tersedia untuk Program Paket.
+                    </small>
                 </div>
 
                 <!-- Form 3 Input Cicilan -->
@@ -218,6 +221,24 @@
         const infoSisa = document.getElementById("info_sisa_cicilan");
         const submitBtn = document.querySelector("button[type=submit]");
         const biayaPendaftaran = 100000;
+        const opsiAngsuran = document.getElementById("opsi_angsuran");
+        const infoKategoriSatuan = document.getElementById("info_kategori_satuan");
+
+        // Cicilan cuma boleh utk Program Paket. Kalau siswa pilih Program Satuan,
+        // opsi "Cicilan" di-disable otomatis dan dipaksa balik ke "Bayar Lunas".
+        function updateOpsiCicilanByKategori() {
+            const opt = selectProgram.options[selectProgram.selectedIndex];
+            const kategori = opt ? opt.getAttribute("data-kategori") : null;
+            const isSatuan = kategori === "satuan";
+
+            opsiAngsuran.disabled = isSatuan;
+            infoKategoriSatuan.classList.toggle("d-none", !isSatuan);
+
+            if (isSatuan && tipePembayaran.value === "angsuran") {
+                tipePembayaran.value = "lunas";
+                window.toggleCicilan();
+            }
+        }
 
         function getTotalTagihan() {
             const opt = selectProgram.options[selectProgram.selectedIndex];
@@ -290,8 +311,10 @@
         window.formatRupiah = formatRupiah;
 
         hitungTotal();
+        updateOpsiCicilanByKategori();
         selectProgram.addEventListener("change", function () {
             hitungTotal();
+            updateOpsiCicilanByKategori();
             if (tipePembayaran.value === "angsuran") suggestCicilan();
         });
     });

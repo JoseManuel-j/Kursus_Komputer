@@ -17,6 +17,7 @@
         .sidebar { 
             width: 260px; height: 100vh; background: #111827; position: fixed; left: 0; top: 0; padding: 30px 15px; 
             display: flex; flex-direction: column; box-shadow: 4px 0 10px rgba(0,0,0,0.1);
+            z-index: 1040; transition: transform 0.3s ease;
         }
         .sidebar h2 { color: white; text-align: center; margin-bottom: 40px; font-size: 22px; font-weight: 700; letter-spacing: 1px; }
         
@@ -28,16 +29,67 @@
         .sidebar a:hover { background: rgba(255, 255, 255, 0.05); color: #ffffff; transform: translateX(5px); }
         .sidebar a.active { background: #7c3aed; color: white; }
         
-        .main-content { margin-left: 260px; padding: 40px; min-height: 100vh; }
+        .main-content { margin-left: 260px; padding: 40px; min-height: 100vh; transition: margin-left 0.3s ease; }
 
         /* Jarak antar kartu kelas supaya tidak nempel satu sama lain */
         .kelas-block:not(:last-child) { margin-bottom: 40px; }
+
+        /* ================= RESPONSIVE: SIDEBAR JADI OFF-CANVAS DI LAYAR KECIL ================= */
+
+        .btn-toggle-sidebar {
+            display: none;
+            position: fixed; top: 16px; left: 16px; z-index: 1050;
+            background: #111827; color: #fff; border: none; border-radius: 10px;
+            width: 44px; height: 44px; align-items: center; justify-content: center;
+            font-size: 1.2rem; box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+        }
+
+        .sidebar-overlay {
+            display: none;
+            position: fixed; inset: 0; background: rgba(17, 24, 39, 0.5);
+            z-index: 1030;
+        }
+        .sidebar-overlay.show { display: block; }
+
+        @media (max-width: 991.98px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            .sidebar.show {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 24px 20px;
+                padding-top: 76px; /* jarak biar konten gak ketiban tombol hamburger */
+            }
+
+            .btn-toggle-sidebar {
+                display: inline-flex;
+            }
+
+            /* Tabel detail angsuran: biar gak terlalu sesak di layar kecil */
+            .table td, .table th { white-space: nowrap; }
+        }
+
+        @media (max-width: 575.98px) {
+            .main-content { padding-left: 14px; padding-right: 14px; }
+        }
     </style>
 </head>
 <body>
 
+<!-- Tombol hamburger: cuma kelihatan di layar kecil (lihat CSS .btn-toggle-sidebar) -->
+<button type="button" class="btn-toggle-sidebar" id="btnToggleSidebar" aria-label="Buka menu">
+    <i class="fa fa-bars"></i>
+</button>
+
+<!-- Overlay: klik di luar sidebar buat nutup (khusus mobile) -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
 <!-- SIDEBAR -->
-<div class="sidebar">
+<div class="sidebar" id="sidebarSiswa">
     <h2>LPK Phitagoras</h2>
 
     <div class="nav-menus">
@@ -277,7 +329,44 @@
             </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Toggle sidebar untuk tampilan mobile/tablet (<= 991px)
+    (function () {
+        const sidebar = document.getElementById('sidebarSiswa');
+        const overlay = document.getElementById('sidebarOverlay');
+        const btnToggle = document.getElementById('btnToggleSidebar');
 
+        function openSidebar() {
+            sidebar.classList.add('show');
+            overlay.classList.add('show');
+        }
+
+        function closeSidebar() {
+            sidebar.classList.remove('show');
+            overlay.classList.remove('show');
+        }
+
+        btnToggle.addEventListener('click', function () {
+            if (sidebar.classList.contains('show')) {
+                closeSidebar();
+            } else {
+                openSidebar();
+            }
+        });
+
+        overlay.addEventListener('click', closeSidebar);
+
+        sidebar.querySelectorAll('a').forEach(function (link) {
+            link.addEventListener('click', function () {
+                if (window.innerWidth <= 991.98) closeSidebar();
+            });
+        });
+
+        window.addEventListener('resize', function () {
+            if (window.innerWidth > 991.98) closeSidebar();
+        });
+    })();
+</script>
 
 </body>
 </html>

@@ -105,6 +105,41 @@
 
             </div>
 
+            {{-- KATEGORI: PAKET / SATUAN — nentuin apakah program ini boleh dicicil --}}
+            <div class="mb-4">
+
+                <label class="form-label fw-bold">
+                    Kategori Program
+                </label>
+
+                <select
+                    name="kategori"
+                    class="form-select"
+                    required
+                >
+
+                    <option value="">
+                        Pilih Kategori
+                    </option>
+
+                    <option
+                        value="paket"
+                        {{ old('kategori') == 'paket' ? 'selected' : '' }}
+                    >
+                        Program Paket (boleh dicicil)
+                    </option>
+
+                    <option
+                        value="satuan"
+                        {{ old('kategori') == 'satuan' ? 'selected' : '' }}
+                    >
+                        Program Satuan (bayar lunas saja)
+                    </option>
+
+                </select>
+
+            </div>
+
 
             {{-- DESKRIPSI --}}
             <div class="mb-4">

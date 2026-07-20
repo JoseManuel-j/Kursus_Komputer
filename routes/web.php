@@ -8,14 +8,20 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PendaftaranController;
 use App\Http\Controllers\AdminProgramController;
 use App\Http\Controllers\TagihanController;
+use App\Http\Controllers\AdminFotoController;
+use App\Models\FotoKegiatan; // <--- Tambahin ini di barisan paling atas
 
 // ===== TAMBAHAN CONTROLLER BARU UNTUK FITUR JADWAL =====
 use App\Http\Controllers\JadwalController;
 use App\Http\Controllers\SiswaDashboardController;
+use App\Http\Controllers\EmailVerificationController;
 // =======================================================
 
 Route::get('/', function () {
-    return view('home');
+    // Ambil semua foto kegiatan yang statusnya aktif, urutkan berdasarkan urutan
+    $galeri = FotoKegiatan::where('aktif', 1)->orderBy('urutan', 'asc')->get();
+    
+    return view('home', compact('galeri'));
 });
 
 Route::get('/program', function () {
@@ -36,11 +42,31 @@ Route::post('/login', [AuthController::class, 'login']);
 
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout'); 
 
-// MENAMPILKAN HALAMAN FORM LUPA PASSWORD (TAMBAHAN)
+/*
+|--------------------------------------------------------------------------
+| VERIFIKASI EMAIL (dikirim otomatis pas siswa daftar)
+|--------------------------------------------------------------------------
+*/
+Route::get('/email/verify', [EmailVerificationController::class, 'notice'])->name('verification.notice');
+Route::get('/email/verify/{id}/{hash}', [EmailVerificationController::class, 'verify'])
+    ->middleware('signed')
+    ->name('verification.verify');
+Route::post('/email/verification-notification', [EmailVerificationController::class, 'resend'])->name('verification.send');
+
+// MENAMPILKAN HALAMAN FORM LUPA PASSWORD (STEP 1: input email)
 Route::get('/forgot-password', [AuthController::class, 'showForgotPassword'])->name('password.request');
 
-// PROSES VERIFIKASI EMAIL (TAMBAHAN)
+// PROSES KIRIM KODE OTP KE EMAIL (STEP 1)
 Route::post('/forgot-password', [AuthController::class, 'sendResetLink'])->name('password.email');
+
+// STEP 2: input kode OTP
+Route::get('/forgot-password/verify-otp', [AuthController::class, 'showVerifyOtp'])->name('password.otp.form');
+Route::post('/forgot-password/verify-otp', [AuthController::class, 'verifyOtp'])->name('password.otp.verify');
+Route::post('/forgot-password/resend-otp', [AuthController::class, 'resendOtp'])->name('password.otp.resend');
+
+// STEP 3: password baru + konfirmasi password
+Route::get('/reset-password', [AuthController::class, 'showResetPassword'])->name('password.reset.form');
+Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('password.reset.submit');
 
 /*
 |--------------------------------------------------------------------------
@@ -439,6 +465,13 @@ Route::middleware('auth')->group(function () {
     // ke TagihanController@updateStatus (yang sudah ada dan siap dipakai).
     Route::post('/admin/tagihan/{id}/update-status', [TagihanController::class, 'updateStatus'])
         ->name('admin.tagihan.update-status');
+
+        // ==========================================
+    // 9. Kelola Foto / Momen Aktivitas
+    // ==========================================
+    Route::get('/admin/foto-kegiatan', [AdminFotoController::class, 'index'])->name('admin.foto.index');
+    Route::post('/admin/foto-kegiatan/store', [AdminFotoController::class, 'store'])->name('admin.foto.store');
+    Route::delete('/admin/foto-kegiatan/{id}', [AdminFotoController::class, 'destroy'])->name('admin.foto.destroy');
 });
 
 /* AREA KHUSUS INSTRUKTUR */

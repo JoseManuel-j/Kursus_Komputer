@@ -16,6 +16,7 @@ class UserSeeder extends Seeder
             'email' => 'admin@phitagoras.site', 
             'password' => Hash::make('teemoslayer'),
             'role' => 'admin', 
+            'email_verified_at' => now(), // admin nggak perlu verifikasi email
         ]);
     }
 }
