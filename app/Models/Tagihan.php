@@ -2,11 +2,15 @@
 
 namespace App\Models;
 
+<<<<<<< HEAD
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+=======
+>>>>>>> 02ac5caa02070f7f9cce06bc341468fd85d689df
 use Illuminate\Database\Eloquent\Model;
 
 class Tagihan extends Model
 {
+<<<<<<< HEAD
     use HasFactory;
 
     protected $table = 'tagihan';
@@ -47,3 +51,16 @@ class Tagihan extends Model
         return max(0, (float) $this->jumlah - (float) $this->total_dibayar);
     }
 }
+=======
+    protected $table = 'tagihan';
+
+    protected $fillable = [
+        'pendaftaran_id',
+        'jumlah',
+        'status',
+        'jatuh_tempo',
+        'buktiTransfer',
+        'tanggal_bayar',
+    ];
+}
+>>>>>>> 02ac5caa02070f7f9cce06bc341468fd85d689df
